@@ -139,7 +139,6 @@ const CHAPTERS = [
 const SECTION_TYPES = {
   intro: { label: '前奏', en: 'Intro', color: '#5FA39B', desc: '用樂器鋪陳氣氛，讓聽眾進入歌曲的世界，通常不會出現主旋律的完整輪廓。', bars: '4–8 小節' },
   verse: { label: '主歌', en: 'Verse', color: '#7C8CE0', desc: '負責敘事，交代場景、情緒的起點。旋律通常較平穩，把空間留給歌詞說故事。', bars: '8 小節' },
-  transition: { label: '過渡段', en: 'Transition', color: '#9B8ADB', desc: '介於主歌和導歌之間的銜接句，常改變節奏型態或唱法，為接下來的段落做鋪墊。', bars: '2–4 小節' },
   prechorus: { label: '導歌', en: 'Pre-Chorus', color: '#C58BDB', desc: '銜接主歌與副歌的橋樑，情緒逐漸堆疊、和聲張力增加，讓副歌的出現更有說服力。', bars: '4 小節' },
   chorus: { label: '副歌', en: 'Chorus', color: '#E8A33D', desc: '整首歌記憶點最強的段落，旋律最高、最好唱、最好記，通常是主題句出現的地方。', bars: '8 小節' },
   interlude: { label: '間奏', en: 'Interlude', color: '#5FA39B', desc: '歌曲中段的器樂段落，通常用來換氣、轉場，或重複主奏樂器的旋律動機。', bars: '4 小節' },
@@ -149,18 +148,28 @@ const SECTION_TYPES = {
 
 const EXAMPLES = [
   {
+    name: '常見結構・基本型',
+    note: '最基礎的三段式骨架：前奏之後主歌、副歌各出現兩次，中間插一段間奏，最後收尾。這不是特定哪一首歌，是很多流行歌共通的骨架。',
+    seq: ['intro', 'verse', 'chorus', 'interlude', 'verse', 'chorus', 'outro'],
+  },
+  {
+    name: '常見結構・完整型',
+    note: '在基本型之上，主歌和副歌之間多了導歌鋪墊情緒，後段再加一段橋段做對比——不少抒情主打歌用的是這個版本。',
+    seq: ['intro', 'verse', 'prechorus', 'chorus', 'interlude', 'verse', 'prechorus', 'chorus', 'bridge', 'chorus', 'outro'],
+  },
+  {
     name: '周杰倫《星晴》',
     note: '結構單純好認：前奏之後主歌、副歌各出現兩次，中間插一段間奏，最後淡出結束——很適合拿來認識最基本的段落順序。',
     seq: ['intro', 'verse', 'chorus', 'interlude', 'verse', 'chorus', 'outro'],
   },
   {
     name: '周杰倫《晴天》',
-    note: '在主歌和副歌之間多鋪了「過渡段」和「導歌」兩層堆疊，情緒是一階一階墊上去的，這一整組會重複兩次，最後用一段口白式的段落收尾。',
-    seq: ['intro', 'verse', 'transition', 'prechorus', 'chorus', 'verse', 'transition', 'prechorus', 'chorus', 'outro'],
+    note: '主歌和副歌之間有一段導歌鋪墊，情緒是一階一階墊上去的，這一整組會重複兩次，最後用一段口白式的段落收尾。',
+    seq: ['intro', 'verse', 'prechorus', 'chorus', 'verse', 'prechorus', 'chorus', 'outro'],
   },
   {
     name: '盧廣仲《太陽與地球》',
-    note: '主歌和導歌各出現兩次才進副歌，副歌也重複兩次；後段安排了一段情緒轉折更強的橋段，最後升了一個調再唱一次副歌收尾——是這三個範例裡層次最豐富的一首。',
+    note: '主歌和導歌各出現兩次才進副歌，副歌也重複兩次；後段安排了一段情緒轉折更強的橋段，最後升了一個調再唱一次副歌收尾——是這幾個範例裡層次最豐富的一首。',
     seq: ['intro', 'verse', 'prechorus', 'chorus', 'verse', 'prechorus', 'chorus', 'bridge', 'chorus', 'outro'],
   },
 ];
@@ -605,7 +614,7 @@ function StructurePage({ sel, setSel, done, toggleDone }) {
       </div>
 
       <h3 className="font-serif text-xl mb-4">範例架構</h3>
-      <div className="flex gap-2 mb-5">
+      <div className="flex flex-wrap gap-2 mb-5">
         {EXAMPLES.map((e, i) => (
           <button
             key={e.name}
