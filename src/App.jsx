@@ -146,26 +146,42 @@ const SECTION_TYPES = {
   outro: { label: '尾奏', en: 'Outro', color: '#5FA39B', desc: '收束整首歌，可以漸弱、重複副歌片段，或安靜地結束。', bars: '4–8 小節' },
 };
 
-const EXAMPLES = [
+function segType(seg) {
+  return typeof seg === 'string' ? seg : seg.type;
+}
+function segLabel(seg) {
+  const base = SECTION_TYPES[segType(seg)].label;
+  return typeof seg === 'string' ? base : `${base}${seg.tag || ''}`;
+}
+
+const GENERIC_STRUCTURES = [
   {
-    name: '常見結構・基本型',
+    name: '基本型',
     note: '最基礎的三段式骨架：前奏之後主歌、副歌各出現兩次，中間插一段間奏，最後收尾。這不是特定哪一首歌，是很多流行歌共通的骨架。',
     seq: ['intro', 'verse', 'chorus', 'interlude', 'verse', 'chorus', 'outro'],
   },
   {
-    name: '常見結構・完整型',
+    name: '完整型',
     note: '在基本型之上，主歌和副歌之間多了導歌鋪墊情緒，後段再加一段橋段做對比——不少抒情主打歌用的是這個版本。',
     seq: ['intro', 'verse', 'prechorus', 'chorus', 'interlude', 'verse', 'prechorus', 'chorus', 'bridge', 'chorus', 'outro'],
   },
+];
+
+const SONG_EXAMPLES = [
   {
     name: '周杰倫《星晴》',
-    note: '結構單純好認：前奏之後主歌、副歌各出現兩次，中間插一段間奏，最後淡出結束——很適合拿來認識最基本的段落順序。',
-    seq: ['intro', 'verse', 'chorus', 'interlude', 'verse', 'chorus', 'outro'],
-  },
-  {
-    name: '周杰倫《晴天》',
-    note: '主歌和副歌之間有一段導歌鋪墊，情緒是一階一階墊上去的，這一整組會重複兩次，最後用一段口白式的段落收尾。',
-    seq: ['intro', 'verse', 'prechorus', 'chorus', 'verse', 'prechorus', 'chorus', 'outro'],
+    note: '拆得更細一點：主歌和副歌其實各自由兩個樂句組成（1、2），中間夾一段導歌鋪墊情緒，這一整組會重複兩次，中間用間奏隔開。',
+    seq: [
+      'intro',
+      { type: 'verse', tag: '1' }, { type: 'verse', tag: '2' },
+      'prechorus',
+      { type: 'chorus', tag: '1' }, { type: 'chorus', tag: '2' },
+      'interlude',
+      { type: 'verse', tag: '1' }, { type: 'verse', tag: '2' },
+      'prechorus',
+      { type: 'chorus', tag: '1' }, { type: 'chorus', tag: '2' },
+      'outro',
+    ],
   },
   {
     name: '盧廣仲《太陽與地球》',
@@ -274,7 +290,6 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playheadCol, setPlayheadCol] = useState(-1);
   const [rhymeOn, setRhymeOn] = useState(false);
-  const [structSel, setStructSel] = useState({ ex: 0, seg: 0 });
 
   const polyRef = useRef(null);
   const synthRef = useRef(null);
@@ -480,7 +495,7 @@ export default function App() {
         {page === 'overview' && <OverviewPage completed={completed} go={setPage} />}
 
         {page === 'structure' && (
-          <StructurePage sel={structSel} setSel={setStructSel} done={completed.structure} toggleDone={() => toggleComplete('structure')} />
+          <StructurePage done={completed.structure} toggleDone={() => toggleComplete('structure')} />
         )}
 
         {page === 'lyrics' && (
@@ -582,9 +597,47 @@ function OverviewPage({ completed, go }) {
 /* 章節一：歌曲架構分析                                                 */
 /* ---------------------------------------------------------------- */
 
-function StructurePage({ sel, setSel, done, toggleDone }) {
-  const ex = EXAMPLES[sel.ex];
-  const activeType = SECTION_TYPES[ex.seq[sel.seg]];
+function StructureDiagram({ item }) {
+  const [segIdx, setSegIdx] = useState(0);
+  const activeType = SECTION_TYPES[segType(item.seq[segIdx])];
+
+  return (
+    <Panel>
+      <p className="font-medium mb-2">{item.name}</p>
+      <p className="text-sm text-[#A9AFC3] mb-4">{item.note}</p>
+      <div className="flex w-full rounded overflow-hidden h-11 mb-4">
+        {item.seq.map((seg, i) => {
+          const s = SECTION_TYPES[segType(seg)];
+          const active = segIdx === i;
+          return (
+            <button
+              key={i}
+              onClick={() => setSegIdx(i)}
+              title={segLabel(seg)}
+              style={{ background: s.color, opacity: active ? 1 : 0.55, flex: 1 }}
+              className="text-xs font-medium text-[#1B1F2A] flex items-center justify-center transition-opacity border-r border-[#1B1F2A]/20 last:border-r-0"
+            >
+              {segLabel(seg)}
+            </button>
+          );
+        })}
+      </div>
+      {activeType && (
+        <div className="border-t border-[#333B52] pt-4">
+          <p className="font-medium mb-1">
+            {segLabel(item.seq[segIdx])} {activeType.en} · {activeType.bars}
+          </p>
+          <p className="text-sm text-[#A9AFC3] leading-relaxed">{activeType.desc}</p>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+function StructurePage({ done, toggleDone }) {
+  const [songSel, setSongSel] = useState({ ex: 0, seg: 0 });
+  const song = SONG_EXAMPLES[songSel.ex];
+  const activeType = SECTION_TYPES[segType(song.seq[songSel.seg])];
 
   return (
     <div>
@@ -613,16 +666,21 @@ function StructurePage({ sel, setSel, done, toggleDone }) {
         ))}
       </div>
 
-      <h3 className="font-serif text-xl mb-4">範例架構</h3>
+      <h3 className="font-serif text-xl mb-4">基本架構</h3>
+      <div className="grid gap-5 mb-10">
+        {GENERIC_STRUCTURES.map((item) => (
+          <StructureDiagram key={item.name} item={item} />
+        ))}
+      </div>
 
-      <p className="text-xs text-[#A9AFC3] mb-2">基本架構</p>
-      <div className="flex flex-wrap gap-2 mb-4">
-        {EXAMPLES.slice(0, 2).map((e, i) => (
+      <h3 className="font-serif text-xl mb-4">歌曲範例</h3>
+      <div className="flex flex-wrap gap-2 mb-5">
+        {SONG_EXAMPLES.map((e, i) => (
           <button
             key={e.name}
-            onClick={() => setSel({ ex: i, seg: 0 })}
+            onClick={() => setSongSel({ ex: i, seg: 0 })}
             className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-              sel.ex === i ? 'border-[#E8A33D] text-[#F2EFE9] bg-[#E8A33D1A]' : 'border-[#333B52] text-[#A9AFC3] hover:text-[#F2EFE9]'
+              songSel.ex === i ? 'border-[#E8A33D] text-[#F2EFE9] bg-[#E8A33D1A]' : 'border-[#333B52] text-[#A9AFC3] hover:text-[#F2EFE9]'
             }`}
           >
             {e.name}
@@ -630,46 +688,30 @@ function StructurePage({ sel, setSel, done, toggleDone }) {
         ))}
       </div>
 
-      <p className="text-xs text-[#A9AFC3] mb-2">歌曲範例</p>
-      <div className="flex flex-wrap gap-2 mb-5">
-        {EXAMPLES.slice(2).map((e, i) => {
-          const globalIdx = i + 2;
-          return (
-            <button
-              key={e.name}
-              onClick={() => setSel({ ex: globalIdx, seg: 0 })}
-              className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
-                sel.ex === globalIdx ? 'border-[#E8A33D] text-[#F2EFE9] bg-[#E8A33D1A]' : 'border-[#333B52] text-[#A9AFC3] hover:text-[#F2EFE9]'
-              }`}
-            >
-              {e.name}
-            </button>
-          );
-        })}
-      </div>
-
       <Panel>
-        <p className="text-sm text-[#A9AFC3] mb-4">{ex.note}</p>
+        <p className="text-sm text-[#A9AFC3] mb-4">{song.note}</p>
         <div className="flex w-full rounded overflow-hidden h-11 mb-4">
-          {ex.seq.map((typeKey, i) => {
-            const s = SECTION_TYPES[typeKey];
-            const active = sel.seg === i;
+          {song.seq.map((seg, i) => {
+            const s = SECTION_TYPES[segType(seg)];
+            const active = songSel.seg === i;
             return (
               <button
                 key={i}
-                onClick={() => setSel({ ex: sel.ex, seg: i })}
-                title={s.label}
+                onClick={() => setSongSel({ ex: songSel.ex, seg: i })}
+                title={segLabel(seg)}
                 style={{ background: s.color, opacity: active ? 1 : 0.55, flex: 1 }}
                 className="text-xs font-medium text-[#1B1F2A] flex items-center justify-center transition-opacity border-r border-[#1B1F2A]/20 last:border-r-0"
               >
-                {s.label}
+                {segLabel(seg)}
               </button>
             );
           })}
         </div>
         {activeType && (
           <div className="border-t border-[#333B52] pt-4">
-            <p className="font-medium mb-1">{activeType.label} {activeType.en} · {activeType.bars}</p>
+            <p className="font-medium mb-1">
+              {segLabel(song.seq[songSel.seg])} {activeType.en} · {activeType.bars}
+            </p>
             <p className="text-sm text-[#A9AFC3] leading-relaxed">{activeType.desc}</p>
           </div>
         )}
