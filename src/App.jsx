@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
-import { Music, ListMusic, PenLine, Guitar, Waves, Play, Save, Check, X, Download, LogOut } from 'lucide-react';
+import { Music, ListMusic, PenLine, Guitar, Waves, Play, Save, Check, X, Download, LogOut, ExternalLink } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -170,6 +170,7 @@ const GENERIC_STRUCTURES = [
 const SONG_EXAMPLES = [
   {
     name: '周杰倫《星晴》',
+    url: 'https://www.youtube.com/watch?v=sTNJsIcPSvE',
     note: '拆得更細一點：主歌和副歌其實各自由兩個樂句組成（1、2），中間夾一段導歌鋪墊情緒，這一整組會重複兩次，中間用間奏隔開。',
     seq: [
       'intro',
@@ -185,6 +186,7 @@ const SONG_EXAMPLES = [
   },
   {
     name: '盧廣仲《太陽與地球》',
+    url: 'https://www.youtube.com/watch?v=PtOY_rgfNoM',
     note: '主歌和導歌各出現兩次才進副歌，副歌也重複兩次；後段安排了一段情緒轉折更強的橋段，最後升了一個調再唱一次副歌收尾——是這幾個範例裡層次最豐富的一首。',
     seq: ['intro', 'verse', 'prechorus', 'chorus', 'verse', 'prechorus', 'chorus', 'bridge', 'chorus', 'outro'],
   },
@@ -689,7 +691,17 @@ function StructurePage({ done, toggleDone }) {
       </div>
 
       <Panel>
-        <p className="text-sm text-[#A9AFC3] mb-4">{song.note}</p>
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <p className="text-sm text-[#A9AFC3]">{song.note}</p>
+          <a
+            href={song.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 inline-flex items-center gap-1 text-xs text-[#E8A33D] hover:underline whitespace-nowrap"
+          >
+            YouTube <ExternalLink size={12} />
+          </a>
+        </div>
         <div className="flex w-full rounded overflow-hidden h-11 mb-4">
           {song.seq.map((seg, i) => {
             const s = SECTION_TYPES[segType(seg)];
