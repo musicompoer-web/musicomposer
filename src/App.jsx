@@ -249,7 +249,7 @@ function LoginScreen() {
   }
 
   return (
-    <div className="min-h-[640px] w-full bg-[#1B1F2A] text-[#F2EFE9] flex items-center justify-center font-sans px-6">
+    <div className="min-h-screen w-full bg-[#1B1F2A] text-[#F2EFE9] flex items-center justify-center font-sans px-6">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;600&display=swap');
         .font-serif { font-family: 'Noto Serif TC', 'PingFang TC', 'Microsoft JhengHei', serif; }
@@ -440,7 +440,7 @@ export default function App() {
   }
 
   if (authLoading) {
-    return <div className="min-h-[640px] w-full bg-[#1B1F2A]" />;
+    return <div className="min-h-screen w-full bg-[#1B1F2A]" />;
   }
 
   if (!user) {
@@ -448,7 +448,7 @@ export default function App() {
   }
 
   return (
-    <div className="w-full min-h-[640px] bg-[#1B1F2A] text-[#F2EFE9] flex flex-col md:flex-row font-sans">
+    <div className="w-full min-h-screen bg-[#1B1F2A] text-[#F2EFE9] flex flex-col md:flex-row font-sans">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;600&display=swap');
         .font-serif { font-family: 'Noto Serif TC', 'PingFang TC', 'Microsoft JhengHei', serif; }
