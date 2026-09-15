@@ -137,14 +137,14 @@ const CHAPTERS = [
 ];
 
 const SECTION_TYPES = {
-  intro: { label: '前奏', color: '#5FA39B', desc: '用樂器鋪陳氣氛，讓聽眾進入歌曲的世界，通常不會出現主旋律的完整輪廓。', bars: '4–8 小節' },
-  verse: { label: '主歌', color: '#7C8CE0', desc: '負責敘事，交代場景、情緒的起點。旋律通常較平穩，把空間留給歌詞說故事。', bars: '8 小節' },
-  transition: { label: '過渡段', color: '#9B8ADB', desc: '介於主歌和導歌之間的銜接句，常改變節奏型態或唱法，為接下來的段落做鋪墊。', bars: '2–4 小節' },
-  prechorus: { label: '導歌', color: '#C58BDB', desc: '銜接主歌與副歌的橋樑，情緒逐漸堆疊、和聲張力增加，讓副歌的出現更有說服力。', bars: '4 小節' },
-  chorus: { label: '副歌', color: '#E8A33D', desc: '整首歌記憶點最強的段落，旋律最高、最好唱、最好記，通常是主題句出現的地方。', bars: '8 小節' },
-  interlude: { label: '間奏', color: '#5FA39B', desc: '歌曲中段的器樂段落，通常用來換氣、轉場，或重複主奏樂器的旋律動機。', bars: '4 小節' },
-  bridge: { label: '橋段', color: '#E1685B', desc: '在歌曲後段提供對比，可以換和聲、換旋律走向，讓聽眾在重複的段落中得到一次驚喜。', bars: '4 小節' },
-  outro: { label: '尾奏', color: '#5FA39B', desc: '收束整首歌，可以漸弱、重複副歌片段，或安靜地結束。', bars: '4–8 小節' },
+  intro: { label: '前奏', en: 'Intro', color: '#5FA39B', desc: '用樂器鋪陳氣氛，讓聽眾進入歌曲的世界，通常不會出現主旋律的完整輪廓。', bars: '4–8 小節' },
+  verse: { label: '主歌', en: 'Verse', color: '#7C8CE0', desc: '負責敘事，交代場景、情緒的起點。旋律通常較平穩，把空間留給歌詞說故事。', bars: '8 小節' },
+  transition: { label: '過渡段', en: 'Transition', color: '#9B8ADB', desc: '介於主歌和導歌之間的銜接句，常改變節奏型態或唱法，為接下來的段落做鋪墊。', bars: '2–4 小節' },
+  prechorus: { label: '導歌', en: 'Pre-Chorus', color: '#C58BDB', desc: '銜接主歌與副歌的橋樑，情緒逐漸堆疊、和聲張力增加，讓副歌的出現更有說服力。', bars: '4 小節' },
+  chorus: { label: '副歌', en: 'Chorus', color: '#E8A33D', desc: '整首歌記憶點最強的段落，旋律最高、最好唱、最好記，通常是主題句出現的地方。', bars: '8 小節' },
+  interlude: { label: '間奏', en: 'Interlude', color: '#5FA39B', desc: '歌曲中段的器樂段落，通常用來換氣、轉場，或重複主奏樂器的旋律動機。', bars: '4 小節' },
+  bridge: { label: '橋段', en: 'Bridge', color: '#E1685B', desc: '在歌曲後段提供對比，可以換和聲、換旋律走向，讓聽眾在重複的段落中得到一次驚喜。', bars: '4 小節' },
+  outro: { label: '尾奏', en: 'Outro', color: '#5FA39B', desc: '收束整首歌，可以漸弱、重複副歌片段，或安靜地結束。', bars: '4–8 小節' },
 };
 
 const EXAMPLES = [
@@ -157,6 +157,11 @@ const EXAMPLES = [
     name: '周杰倫《晴天》',
     note: '在主歌和副歌之間多鋪了「過渡段」和「導歌」兩層堆疊，情緒是一階一階墊上去的，這一整組會重複兩次，最後用一段口白式的段落收尾。',
     seq: ['intro', 'verse', 'transition', 'prechorus', 'chorus', 'verse', 'transition', 'prechorus', 'chorus', 'outro'],
+  },
+  {
+    name: '盧廣仲《太陽與地球》',
+    note: '主歌和導歌各出現兩次才進副歌，副歌也重複兩次；後段安排了一段情緒轉折更強的橋段，最後升了一個調再唱一次副歌收尾——是這三個範例裡層次最豐富的一首。',
+    seq: ['intro', 'verse', 'prechorus', 'chorus', 'verse', 'prechorus', 'chorus', 'bridge', 'chorus', 'outro'],
   },
 ];
 
@@ -589,7 +594,9 @@ function StructurePage({ sel, setSel, done, toggleDone }) {
           <Panel key={key} className="!p-4">
             <div className="flex items-center gap-2 mb-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
-              <p className="font-medium">{s.label}</p>
+              <p className="font-medium">
+                {s.label} <span className="text-[#A9AFC3] font-normal text-xs">{s.en}</span>
+              </p>
               <span className="text-xs text-[#A9AFC3] ml-auto">{s.bars}</span>
             </div>
             <p className="text-sm text-[#A9AFC3] leading-relaxed">{s.desc}</p>
@@ -633,7 +640,7 @@ function StructurePage({ sel, setSel, done, toggleDone }) {
         </div>
         {activeType && (
           <div className="border-t border-[#333B52] pt-4">
-            <p className="font-medium mb-1">{activeType.label} · {activeType.bars}</p>
+            <p className="font-medium mb-1">{activeType.label} {activeType.en} · {activeType.bars}</p>
             <p className="text-sm text-[#A9AFC3] leading-relaxed">{activeType.desc}</p>
           </div>
         )}
