@@ -614,8 +614,10 @@ function StructurePage({ sel, setSel, done, toggleDone }) {
       </div>
 
       <h3 className="font-serif text-xl mb-4">範例架構</h3>
-      <div className="flex flex-wrap gap-2 mb-5">
-        {EXAMPLES.map((e, i) => (
+
+      <p className="text-xs text-[#A9AFC3] mb-2">基本架構</p>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {EXAMPLES.slice(0, 2).map((e, i) => (
           <button
             key={e.name}
             onClick={() => setSel({ ex: i, seg: 0 })}
@@ -626,6 +628,24 @@ function StructurePage({ sel, setSel, done, toggleDone }) {
             {e.name}
           </button>
         ))}
+      </div>
+
+      <p className="text-xs text-[#A9AFC3] mb-2">歌曲範例</p>
+      <div className="flex flex-wrap gap-2 mb-5">
+        {EXAMPLES.slice(2).map((e, i) => {
+          const globalIdx = i + 2;
+          return (
+            <button
+              key={e.name}
+              onClick={() => setSel({ ex: globalIdx, seg: 0 })}
+              className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                sel.ex === globalIdx ? 'border-[#E8A33D] text-[#F2EFE9] bg-[#E8A33D1A]' : 'border-[#333B52] text-[#A9AFC3] hover:text-[#F2EFE9]'
+              }`}
+            >
+              {e.name}
+            </button>
+          );
+        })}
       </div>
 
       <Panel>
