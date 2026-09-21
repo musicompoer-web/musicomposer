@@ -630,8 +630,10 @@ function StructureDiagram({ item, types = SECTION_TYPES }) {
               key={i}
               onClick={() => setSegIdx(i)}
               title={segLabel(seg, types)}
-              style={{ background: s.color, opacity: active ? 1 : 0.55, flex: 1 }}
-              className="text-xs font-medium text-[#1B1F2A] flex items-center justify-center transition-opacity border-r border-[#1B1F2A]/20 last:border-r-0"
+              style={{ background: s.color, flex: 1 }}
+              className={`text-xs font-medium text-[#1B1F2A] flex items-center justify-center border-r border-[#1B1F2A]/20 last:border-r-0 ${
+                active ? 'ring-2 ring-inset ring-white' : ''
+              }`}
             >
               {segLabel(seg, types)}
             </button>
@@ -725,8 +727,10 @@ function StructurePage({ done, toggleDone }) {
                 key={i}
                 onClick={() => setSongSel({ ex: songSel.ex, seg: i })}
                 title={segLabel(seg)}
-                style={{ background: s.color, opacity: active ? 1 : 0.55, flex: 1 }}
-                className="text-xs font-medium text-[#1B1F2A] flex items-center justify-center transition-opacity border-r border-[#1B1F2A]/20 last:border-r-0"
+                style={{ background: s.color, flex: 1 }}
+                className={`text-xs font-medium text-[#1B1F2A] flex items-center justify-center border-r border-[#1B1F2A]/20 last:border-r-0 ${
+                  active ? 'ring-2 ring-inset ring-white' : ''
+                }`}
               >
                 {segLabel(seg)}
               </button>
@@ -743,7 +747,7 @@ function StructurePage({ done, toggleDone }) {
         )}
       </Panel>
 
-      <h3 className="font-serif text-xl mb-4 mt-10">Rap 支線</h3>
+      <h3 className="font-serif text-xl mb-4 mt-10">Rap</h3>
       <Panel className="mb-6">
         <p className="text-sm text-[#A9AFC3] leading-relaxed mb-1">
           Rap（饒舌）是一種帶有節奏與押韻的說唱方式，1970 年代起源於美國非裔移民社群，是嘻哈文化（Hip-Hop）裡最核心的表演形式之一。
