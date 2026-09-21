@@ -149,8 +149,8 @@ const SECTION_TYPES = {
 function segType(seg) {
   return typeof seg === 'string' ? seg : seg.type;
 }
-function segLabel(seg) {
-  const base = SECTION_TYPES[segType(seg)].label;
+function segLabel(seg, types = SECTION_TYPES) {
+  const base = types[segType(seg)].label;
   return typeof seg === 'string' ? base : `${base}${seg.tag || ''}`;
 }
 
@@ -166,6 +166,20 @@ const GENERIC_STRUCTURES = [
     seq: ['intro', 'verse', 'prechorus', 'chorus', 'interlude', 'verse', 'prechorus', 'chorus', 'bridge', 'chorus', 'outro'],
   },
 ];
+
+const RAP_TERMS = {
+  intro: { label: '前奏', en: 'Intro', color: '#5FA39B', desc: '決定整首歌一開始的氛圍。' },
+  verse: { label: '主歌', en: 'Verse', color: '#7C8CE0', desc: '敘述故事，是饒舌歌詞發揮的重點段落。' },
+  hook: { label: '副歌', en: 'Hook', color: '#E8A33D', desc: '通常是作者最想表達的意義或宗旨，重複出現、最好記。' },
+  bridge: { label: '過門', en: 'Bridge', color: '#E1685B', desc: '銜接段落之間的情緒轉換。' },
+  outro: { label: '尾奏', en: 'Outro', color: '#5FA39B', desc: '決定整首歌收尾時想傳達的氛圍。' },
+};
+
+const RAP_STRUCTURE = {
+  name: 'Rap 曲式範例',
+  note: '前奏之後先用一段過門銜接情緒，主歌和副歌（Hook）依歌曲長度重複兩到三次，最後再用過門收束情緒，尾奏結束。',
+  seq: ['intro', 'bridge', { type: 'verse', tag: '1' }, 'hook', { type: 'verse', tag: '2' }, 'hook', 'bridge', 'outro'],
+};
 
 const SONG_EXAMPLES = [
   {
@@ -599,9 +613,9 @@ function OverviewPage({ completed, go }) {
 /* 章節一：歌曲架構分析                                                 */
 /* ---------------------------------------------------------------- */
 
-function StructureDiagram({ item }) {
+function StructureDiagram({ item, types = SECTION_TYPES }) {
   const [segIdx, setSegIdx] = useState(0);
-  const activeType = SECTION_TYPES[segType(item.seq[segIdx])];
+  const activeType = types[segType(item.seq[segIdx])];
 
   return (
     <Panel>
@@ -609,17 +623,17 @@ function StructureDiagram({ item }) {
       <p className="text-sm text-[#A9AFC3] mb-4">{item.note}</p>
       <div className="flex w-full rounded overflow-hidden h-11 mb-4">
         {item.seq.map((seg, i) => {
-          const s = SECTION_TYPES[segType(seg)];
+          const s = types[segType(seg)];
           const active = segIdx === i;
           return (
             <button
               key={i}
               onClick={() => setSegIdx(i)}
-              title={segLabel(seg)}
+              title={segLabel(seg, types)}
               style={{ background: s.color, opacity: active ? 1 : 0.55, flex: 1 }}
               className="text-xs font-medium text-[#1B1F2A] flex items-center justify-center transition-opacity border-r border-[#1B1F2A]/20 last:border-r-0"
             >
-              {segLabel(seg)}
+              {segLabel(seg, types)}
             </button>
           );
         })}
@@ -627,7 +641,7 @@ function StructureDiagram({ item }) {
       {activeType && (
         <div className="border-t border-[#333B52] pt-4">
           <p className="font-medium mb-1">
-            {segLabel(item.seq[segIdx])} {activeType.en} · {activeType.bars}
+            {segLabel(item.seq[segIdx], types)} {activeType.en} · {activeType.bars || ''}
           </p>
           <p className="text-sm text-[#A9AFC3] leading-relaxed">{activeType.desc}</p>
         </div>
@@ -728,6 +742,37 @@ function StructurePage({ done, toggleDone }) {
           </div>
         )}
       </Panel>
+
+      <h3 className="font-serif text-xl mb-4 mt-10">Rap 支線</h3>
+      <Panel className="mb-6">
+        <p className="text-sm text-[#A9AFC3] leading-relaxed mb-1">
+          Rap（饒舌）是一種帶有節奏與押韻的說唱方式，1970 年代起源於美國非裔移民社群，是嘻哈文化（Hip-Hop）裡最核心的表演形式之一。
+        </p>
+        <p className="text-xs text-[#A9AFC3] mt-4 mb-2">Hip-Hop 四大元素</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {['DJ', 'MC', 'B-BOY', 'Graffiti'].map((el) => (
+            <div key={el} className="text-center border border-[#333B52] rounded-md py-3 text-sm font-medium">
+              {el}
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <div className="grid gap-3 sm:grid-cols-2 mb-6">
+        {Object.entries(RAP_TERMS).map(([key, s]) => (
+          <Panel key={key} className="!p-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
+              <p className="font-medium">
+                {s.label} <span className="text-[#A9AFC3] font-normal text-xs">{s.en}</span>
+              </p>
+            </div>
+            <p className="text-sm text-[#A9AFC3] leading-relaxed">{s.desc}</p>
+          </Panel>
+        ))}
+      </div>
+
+      <StructureDiagram item={RAP_STRUCTURE} types={RAP_TERMS} />
     </div>
   );
 }
