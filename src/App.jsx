@@ -1435,7 +1435,7 @@ function TeacherDashboard() {
 
     // 準備資料列
     const rows = students.map((s) => {
-      const info = s.studentInfo || {};
+      const info = s.lyricAnalysis?.studentInfo || {};
       const entries = s.lyricAnalysis?.entries || [];
       const custom = s.lyricAnalysis?.custom || {};
       const progression = (s.progression || []).map((d) => ROMAN[d] || '').join(' → ');
@@ -1557,7 +1557,7 @@ function TeacherDashboard() {
             <p className="text-xs text-[#A9AFC3] mb-4">共 {students.length} 位學生</p>
             <div className="space-y-2">
               {students.map((s, idx) => {
-                const info = s.studentInfo || {};
+                const info = s.lyricAnalysis?.studentInfo || {};
                 const isExpanded = expandedId === s.id;
                 return (
                   <Panel key={s.id} className="!p-0 overflow-hidden">
