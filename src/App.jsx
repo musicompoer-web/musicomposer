@@ -176,11 +176,19 @@ const RAP_TERMS = {
   outro: { label: '尾奏', en: 'Outro', color: '#5FA39B', desc: '決定整首歌收尾時想傳達的氛圍。' },
 };
 
+const HIPHOP_ELEMENTS = [
+  { name: 'DJ', desc: '操作黑膠唱盤與混音器，負責 Scratch（刮碟）、混音與節奏採樣，是嘻哈音樂最早的核心角色。' },
+  { name: 'MC', desc: 'Master of Ceremony，也就是饒舌歌手本人，負責主持氣氛、即興或編寫歌詞、把節奏說唱出來。' },
+  { name: 'B-BOY', desc: '也稱 Breaking／Breakdance，是配合節奏發展出的地板舞蹈，強調技巧性的旋轉、定格與battle對戰。' },
+  { name: 'Graffiti', desc: '塗鴉，用噴漆在牆面、車廂等地方作畫或寫字，是嘻哈文化裡的視覺藝術表現。' },
+];
+
 const RAP_STRUCTURE = {
   name: 'Rap 曲式範例',
   note: '主歌和副歌（Hook）依歌曲長度重複兩到三次，前奏起頭、尾奏收尾。',
   seq: ['intro', { type: 'verse', tag: '1' }, 'hook', { type: 'verse', tag: '2' }, 'hook', 'outro'],
 };
+
 
 const RAP_SONG_EXAMPLES = [
   {
@@ -798,10 +806,11 @@ function StructurePage({ done, toggleDone }) {
           Rap（饒舌）是一種帶有節奏與押韻的說唱方式，1970 年代起源於美國非裔移民社群，是嘻哈文化（Hip-Hop）裡最核心的表演形式之一。
         </p>
         <p className="text-xs text-[#A9AFC3] mt-4 mb-2">Hip-Hop 四大元素</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {['DJ', 'MC', 'B-BOY', 'Graffiti'].map((el) => (
-            <div key={el} className="text-center border border-[#333B52] rounded-md py-3 text-sm font-medium">
-              {el}
+        <div className="grid gap-2 sm:grid-cols-2">
+          {HIPHOP_ELEMENTS.map((el) => (
+            <div key={el.name} className="border border-[#333B52] rounded-md px-3 py-2.5">
+              <p className="text-sm font-medium mb-0.5">{el.name}</p>
+              <p className="text-xs text-[#A9AFC3] leading-relaxed">{el.desc}</p>
             </div>
           ))}
         </div>
