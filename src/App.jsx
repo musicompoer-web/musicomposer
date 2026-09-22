@@ -1166,7 +1166,7 @@ function LyricsPage({ rhymeOn, setRhymeOn, done, toggleDone, subjectLyrics, setS
       {/* 模式切換 */}
       <div className="flex gap-2 mb-8">
         {[
-          { id: 'subject', label: '📖 科目歌詞' },
+          { id: 'subject', label: '📖 主題歌詞' },
           { id: 'general', label: '✍️ 自由創作' },
         ].map((t) => (
           <button
@@ -1272,17 +1272,10 @@ function SubjectLyricsContent({ subjectLyrics, setSubjectLyrics, onSave, savedMs
           </div>
         ) : (
           <div className="text-center">
-            <div className="inline-block bg-[#E8A33D] text-[#1B1F2A] rounded-lg px-8 py-4 mb-3">
+            <div className="inline-block bg-[#E8A33D] text-[#1B1F2A] rounded-lg px-8 py-4">
               <p className="text-xs mb-1">你的科目是</p>
               <p className="font-serif text-3xl font-bold">{subjectLyrics.drawnSubject.name}</p>
             </div>
-            <br />
-            <button
-              onClick={() => setSubjectLyrics((prev) => ({ ...prev, drawnSubject: null, customChapter: '' }))}
-              className="text-xs text-[#A9AFC3] hover:text-[#F2EFE9] underline"
-            >
-              重新抽籤
-            </button>
           </div>
         )}
       </Panel>
