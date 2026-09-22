@@ -3,7 +3,7 @@ import * as Tone from 'tone';
 import { Music, ListMusic, PenLine, Guitar, Waves, Play, Save, Check, X, Download, LogOut, ExternalLink, Headphones } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 
 /* ---------------------------------------------------------------- */
 /* 音樂理論工具函式                                                    */
@@ -330,6 +330,7 @@ function LoginScreen() {
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [teacherMode, setTeacherMode] = useState(window.location.hash === '#teacher');
 
   const [page, setPage] = useState('overview');
   const [rootIndex, setRootIndex] = useState(0); // C
@@ -505,6 +506,11 @@ export default function App() {
 
   if (authLoading) {
     return <div className="min-h-screen w-full bg-[#1B1F2A]" />;
+  }
+
+  // 教師 Dashboard 模式
+  if (teacherMode) {
+    return <TeacherDashboard />;
   }
 
   if (!user) {
@@ -1360,6 +1366,178 @@ function MelodyPage({
           </p>
         </Panel>
       )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* 教師 Dashboard                                                      */
+/* ---------------------------------------------------------------- */
+
+function TeacherDashboard() {
+  const [password, setPassword] = useState('');
+  const [authenticated, setAuthenticated] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
+
+  const TEACHER_PASSWORD = 'music2024'; // 可修改為您的密碼
+
+  async function handleLogin() {
+    if (password === TEACHER_PASSWORD) {
+      setAuthenticated(true);
+      setLoading(true);
+      try {
+        const snapshot = await getDocs(collection(db, 'progress'));
+        const data = [];
+        snapshot.forEach((docSnap) => {
+          data.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        // 排序：依班級、座號
+        data.sort((a, b) => {
+          const aInfo = a.studentInfo || {};
+          const bInfo = b.studentInfo || {};
+          const classCmp = (aInfo.className || '').localeCompare(bInfo.className || '');
+          if (classCmp !== 0) return classCmp;
+          return (aInfo.seatNumber || '').localeCompare(bInfo.seatNumber || '');
+        });
+        setStudents(data);
+      } catch (e) {
+        console.error('載入失敗:', e);
+      }
+      setLoading(false);
+    } else {
+      alert('密碼錯誤');
+    }
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#1B1F2A]">
+        <Panel className="w-full max-w-sm">
+          <h2 className="font-serif text-xl mb-4 text-[#F2EFE9]">教師 Dashboard</h2>
+          <p className="text-xs text-[#A9AFC3] mb-3">請輸入密碼查看學生資料</p>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+            className="w-full bg-[#1F2430] border border-[#333B52] rounded-md px-3 py-2 text-sm text-[#F2EFE9] mb-3 focus:outline-none focus:border-[#E8A33D]"
+            placeholder="密碼"
+          />
+          <button
+            onClick={handleLogin}
+            className="w-full bg-[#E8A33D] text-[#1B1F2A] rounded-md py-2 text-sm font-medium hover:bg-[#D4922E]"
+          >
+            進入
+          </button>
+        </Panel>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#1B1F2A] text-[#F2EFE9] p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="font-serif text-2xl">📊 學生回答總覽</h1>
+          <button
+            onClick={() => setAuthenticated(false)}
+            className="text-xs text-[#A9AFC3] hover:text-[#E1685B]"
+          >
+            登出
+          </button>
+        </div>
+
+        {loading ? (
+          <p className="text-[#A9AFC3]">載入中...</p>
+        ) : students.length === 0 ? (
+          <p className="text-[#A9AFC3]">尚未有學生提交資料</p>
+        ) : (
+          <>
+            <p className="text-xs text-[#A9AFC3] mb-4">共 {students.length} 位學生</p>
+            <div className="space-y-2">
+              {students.map((s, idx) => {
+                const info = s.studentInfo || {};
+                const isExpanded = expandedId === s.id;
+                return (
+                  <Panel key={s.id} className="!p-0 overflow-hidden">
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : s.id)}
+                      className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-[#2A3040] transition-colors"
+                    >
+                      <span className="text-xs text-[#5B6178] w-6">{idx + 1}</span>
+                      <span className="text-sm font-medium w-24">{info.className || '—'}</span>
+                      <span className="text-sm text-[#A9AFC3] w-12">{info.seatNumber || '—'}</span>
+                      <span className="text-sm flex-1">{info.name || '未填寫'}</span>
+                      <span className="text-xs text-[#5B6178]">{isExpanded ? '▲' : '▼'}</span>
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-[#333B52] px-4 py-4 space-y-4">
+                        {/* 完成狀態 */}
+                        <div>
+                          <p className="text-xs text-[#E8A33D] mb-2">完成狀態</p>
+                          <div className="flex flex-wrap gap-2">
+                            {['structure', 'lyric-analysis', 'lyrics', 'chords', 'melody'].map((key) => (
+                              <span
+                                key={key}
+                                className={`text-xs px-2 py-1 rounded ${
+                                  s.completed?.[key]
+                                    ? 'bg-[#8FBF9F]/20 text-[#8FBF9F]'
+                                    : 'bg-[#333B52] text-[#5B6178]'
+                                }`}
+                              >
+                                {s.completed?.[key] ? '✓' : '○'} {key}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 歌詞記憶分析 */}
+                        {s.lyricAnalysis?.entries && (
+                          <div>
+                            <p className="text-xs text-[#E8A33D] mb-2">歌詞記憶分析</p>
+                            <div className="space-y-2">
+                              {s.lyricAnalysis.entries.map((entry, i) => (
+                                entry?.hook || entry?.category ? (
+                                  <div key={i} className="bg-[#1F2430] rounded p-2">
+                                    <p className="text-xs text-[#5B6178] mb-1">歌曲 {i + 1}</p>
+                                    <p className="text-sm"><span className="text-[#A9AFC3]">洗腦邏輯：</span>{entry.hook || '—'}</p>
+                                    <p className="text-sm"><span className="text-[#A9AFC3]">歸類：</span>{entry.category || '—'}</p>
+                                  </div>
+                                ) : null
+                              ))}
+                              {s.lyricAnalysis.custom?.song && (
+                                <div className="bg-[#1F2430] rounded p-2">
+                                  <p className="text-xs text-[#5B6178] mb-1">自選歌曲</p>
+                                  <p className="text-sm"><span className="text-[#A9AFC3]">歌曲：</span>{s.lyricAnalysis.custom.song}</p>
+                                  <p className="text-sm"><span className="text-[#A9AFC3]">洗腦邏輯：</span>{s.lyricAnalysis.custom.hook || '—'}</p>
+                                  <p className="text-sm"><span className="text-[#A9AFC3]">歸類：</span>{s.lyricAnalysis.custom.category || '—'}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 和弦進行 */}
+                        {s.progression?.length > 0 && (
+                          <div>
+                            <p className="text-xs text-[#E8A33D] mb-2">和弦進行</p>
+                            <p className="text-sm">
+                              {s.progression.map((d) => ROMAN[d]).join(' → ')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Panel>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
