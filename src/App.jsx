@@ -394,6 +394,7 @@ export default function App() {
   const [subjectLyrics, setSubjectLyrics] = useState({
     drawnSubject: null,    // 抽中的科目
     customChapter: '',     // 學生自己輸入的章節
+    group: '',             // 組別
     keywords: {            // 關鍵字發想（4 個分類 × 各 4 個）
       branch1: { title: '', words: ['', '', '', ''] },
       branch2: { title: '', words: ['', '', '', ''] },
@@ -1262,6 +1263,18 @@ function SubjectLyricsContent({ subjectLyrics, setSubjectLyrics, onSave, savedMs
         用唱歌的方式記住課本內容，比死背更有效！
       </p>
 
+      {/* 組別填入 */}
+      <Panel className="mb-6">
+        <h3 className="font-serif text-lg mb-3">組別</h3>
+        <input
+          type="text"
+          value={subjectLyrics.group}
+          onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, group: e.target.value }))}
+          placeholder="A / B / C"
+          className="w-full sm:w-48 bg-[#1F2430] border border-[#333B52] rounded-md px-3 py-2 text-sm text-[#F2EFE9] focus:outline-none focus:border-[#E8A33D]"
+        />
+      </Panel>
+
       {/* 步驟一：抽籤選科目 */}
       <Panel className="mb-6">
         <h3 className="font-serif text-lg mb-3">步驟一：抽籤選科目</h3>
@@ -1744,9 +1757,9 @@ function TeacherDashboard() {
       'Supernova 洗腦邏輯', 'Supernova 歸類',
       'Cherish 洗腦邏輯', 'Cherish 歸類',
       '自選歌曲', '自選歌曲-洗腦邏輯', '自選歌曲-歸類',
-      '主題歌詞-科目', '主題歌詞-章節', '主題歌詞-歌名', '主題歌詞-歌詞',
+      '主題歌詞-組別', '主題歌詞-科目', '主題歌詞-章節', '主題歌詞-歌名', '主題歌詞-主歌', '主題歌詞-副歌',
       '和弦進行',
-      '架構分析完成', '歌詞分析完成', '主題歌詞完成', '歌詞創作完成', '和弦完成', '旋律完成'
+      '架構分析完成', '歌詞分析完成', '歌詞創作完成', '和弦完成', '旋律完成'
     ];
 
     // 準備資料列
@@ -1773,10 +1786,12 @@ function TeacherDashboard() {
         custom.song || '',
         custom.hook || '',
         custom.category || '',
+        subj.group || '',
         subj.drawnSubject?.name || '',
-        subj.selectedChapter?.name || '',
+        subj.customChapter || '',
         subj.songTitle || '',
-        subj.lyrics || '',
+        subj.verse || '',
+        subj.chorus || '',
         progression,
         s.completed?.structure ? '✓' : '',
         s.completed?.['lyric-analysis'] ? '✓' : '',
