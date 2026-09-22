@@ -340,6 +340,10 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playheadCol, setPlayheadCol] = useState(-1);
   const [rhymeOn, setRhymeOn] = useState(false);
+  const [lyricAnalysis, setLyricAnalysis] = useState({
+    entries: LYRIC_MEMORY_SONGS.map(() => ({ hook: '', category: '' })),
+    custom: { song: '', hook: '', category: '' },
+  });
 
   const polyRef = useRef(null);
   const synthRef = useRef(null);
@@ -389,6 +393,14 @@ export default function App() {
           if (Array.isArray(data.progression) && data.progression.length) setProgression(data.progression);
           if (Array.isArray(data.melody)) setMelody(data.melody);
           if (data.completed) setCompleted(data.completed);
+          if (data.lyricAnalysis) {
+            setLyricAnalysis((prev) => ({
+              entries: Array.isArray(data.lyricAnalysis.entries) && data.lyricAnalysis.entries.length === prev.entries.length
+                ? data.lyricAnalysis.entries
+                : prev.entries,
+              custom: data.lyricAnalysis.custom || prev.custom,
+            }));
+          }
         }
       } catch (e) {
         // 沒有先前的資料，忽略即可
@@ -402,7 +414,7 @@ export default function App() {
     async (patch) => {
       if (!loadedRef.current || !user) return;
       try {
-        const payload = { rootIndex, progression, melody, completed, ...patch };
+        const payload = { rootIndex, progression, melody, completed, lyricAnalysis, ...patch };
         await setDoc(doc(db, 'progress', user.uid), payload, { merge: true });
         setSavedMsg('已儲存');
         setTimeout(() => setSavedMsg(''), 1800);
@@ -411,7 +423,7 @@ export default function App() {
         setTimeout(() => setSavedMsg(''), 2200);
       }
     },
-    [user, rootIndex, progression, melody, completed]
+    [user, rootIndex, progression, melody, completed, lyricAnalysis]
   );
 
   async function ensureAudio() {
@@ -549,7 +561,14 @@ export default function App() {
         )}
 
         {page === 'lyric-analysis' && (
-          <LyricAnalysisPage done={completed['lyric-analysis']} toggleDone={() => toggleComplete('lyric-analysis')} />
+          <LyricAnalysisPage
+            done={completed['lyric-analysis']}
+            toggleDone={() => toggleComplete('lyric-analysis')}
+            lyricAnalysis={lyricAnalysis}
+            setLyricAnalysis={setLyricAnalysis}
+            onSave={() => persist({})}
+            savedMsg={savedMsg}
+          />
         )}
 
         {page === 'lyrics' && (
@@ -911,7 +930,22 @@ function StructurePage({ done, toggleDone }) {
 /* 章節二：歌詞記憶分析                                                 */
 /* ---------------------------------------------------------------- */
 
-function LyricAnalysisPage({ done, toggleDone }) {
+function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, onSave, savedMsg }) {
+  function updateEntry(i, field, value) {
+    setLyricAnalysis((prev) => {
+      const entries = prev.entries.slice();
+      entries[i] = { ...entries[i], [field]: value };
+      return { ...prev, entries };
+    });
+  }
+
+  function updateCustom(field, value) {
+    setLyricAnalysis((prev) => ({ ...prev, custom: { ...prev.custom, [field]: value } }));
+  }
+
+  const inputCls =
+    'w-full bg-[#1F2430] border border-[#333B52] rounded-md px-3 py-2 text-sm text-[#F2EFE9] placeholder-[#5B6178] focus:outline-none focus:border-[#E8A33D]';
+
   return (
     <div>
       <div className="flex items-center justify-between gap-4 mb-1">
@@ -922,26 +956,93 @@ function LyricAnalysisPage({ done, toggleDone }) {
       </div>
 
       <p className="text-[#A9AFC3] max-w-[62ch] leading-relaxed -mt-4 mb-8">
-        在開始寫詞之前，先聽聽這幾首歌的副歌片段，感受一下：什麼樣的字詞、節奏、重複方式，會讓一句歌詞一聽就記住、忍不住跟著唱。
-        點下面的連結會直接跳到副歌開始的時間點。
+        點連結聽聽這幾首歌的副歌片段（會直接跳到副歌開始的時間點），想想這句歌詞為什麼讓人一聽就記住、忍不住跟著唱，
+        寫下你觀察到的「洗腦邏輯」，再幫它歸類。最後一列可以填你自己找到的歌。
       </p>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-3">
         {LYRIC_MEMORY_SONGS.map((s, i) => (
-          <a
-            key={i}
-            href={s.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center justify-between gap-3 border border-[#333B52] rounded-md px-4 py-3 hover:border-[#E8A33D] hover:bg-[#232838] transition-colors"
-          >
-            <div>
-              <p className="font-medium text-sm">{s.title}</p>
-              <p className="text-xs text-[#A9AFC3] mt-0.5">{s.artist}</p>
+          <Panel key={i} className="!p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <a
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-2 min-w-0"
+              >
+                <span className="text-xs text-[#5B6178] shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                <span className="font-medium text-sm truncate group-hover:text-[#E8A33D]">{s.title}</span>
+                <span className="text-xs text-[#A9AFC3] truncate">{s.artist}</span>
+                <ExternalLink size={13} className="text-[#A9AFC3] group-hover:text-[#E8A33D] shrink-0" />
+              </a>
             </div>
-            <ExternalLink size={15} className="text-[#A9AFC3] group-hover:text-[#E8A33D] shrink-0" />
-          </a>
+            <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
+              <div>
+                <label className="text-xs text-[#A9AFC3] block mb-1">歌詞洗腦邏輯</label>
+                <textarea
+                  value={lyricAnalysis.entries[i]?.hook || ''}
+                  onChange={(e) => updateEntry(i, 'hook', e.target.value)}
+                  rows={2}
+                  placeholder="例如：重複同一句、用狀聲詞、字數整齊..."
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#A9AFC3] block mb-1">歸類</label>
+                <input
+                  type="text"
+                  value={lyricAnalysis.entries[i]?.category || ''}
+                  onChange={(e) => updateEntry(i, 'category', e.target.value)}
+                  placeholder="例如：重複型"
+                  className={inputCls}
+                />
+              </div>
+            </div>
+          </Panel>
         ))}
+
+        <Panel className="!p-4 border-dashed">
+          <p className="text-xs text-[#A9AFC3] mb-2">自選歌曲</p>
+          <input
+            type="text"
+            value={lyricAnalysis.custom.song}
+            onChange={(e) => updateCustom('song', e.target.value)}
+            placeholder="歌手 – 歌名"
+            className={`${inputCls} mb-3`}
+          />
+          <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
+            <div>
+              <label className="text-xs text-[#A9AFC3] block mb-1">歌詞洗腦邏輯</label>
+              <textarea
+                value={lyricAnalysis.custom.hook}
+                onChange={(e) => updateCustom('hook', e.target.value)}
+                rows={2}
+                placeholder="例如：重複同一句、用狀聲詞、字數整齊..."
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-[#A9AFC3] block mb-1">歸類</label>
+              <input
+                type="text"
+                value={lyricAnalysis.custom.category}
+                onChange={(e) => updateCustom('category', e.target.value)}
+                placeholder="例如：重複型"
+                className={inputCls}
+              />
+            </div>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="flex items-center gap-3 mt-6">
+        <button
+          onClick={onSave}
+          className="inline-flex items-center gap-2 border border-[#333B52] rounded-md px-4 py-2 text-sm text-[#A9AFC3] hover:text-[#F2EFE9]"
+        >
+          <Save size={15} /> 儲存填寫內容
+        </button>
+        {savedMsg && <span className="text-xs text-[#8FBF9F]">{savedMsg}</span>}
       </div>
     </div>
   );
