@@ -972,7 +972,6 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
               type="text"
               value={lyricAnalysis.studentInfo.className}
               onChange={(e) => setLyricAnalysis((prev) => ({ ...prev, studentInfo: { ...prev.studentInfo, className: e.target.value } }))}
-              placeholder="例如：一年忠班"
               className={inputCls}
             />
           </div>
@@ -982,7 +981,6 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
               type="text"
               value={lyricAnalysis.studentInfo.seatNumber}
               onChange={(e) => setLyricAnalysis((prev) => ({ ...prev, studentInfo: { ...prev.studentInfo, seatNumber: e.target.value } }))}
-              placeholder="例如：12"
               className={inputCls}
             />
           </div>
@@ -992,7 +990,6 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
               type="text"
               value={lyricAnalysis.studentInfo.name}
               onChange={(e) => setLyricAnalysis((prev) => ({ ...prev, studentInfo: { ...prev.studentInfo, name: e.target.value } }))}
-              placeholder="你的姓名"
               className={inputCls}
             />
           </div>
