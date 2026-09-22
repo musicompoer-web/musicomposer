@@ -669,6 +669,7 @@ function StructureDiagram({ item, types = SECTION_TYPES }) {
 }
 
 function StructurePage({ done, toggleDone }) {
+  const [structureView, setStructureView] = useState('basic'); // 'basic' | 'rap'
   const [songSel, setSongSel] = useState({ ex: 0, seg: 0 });
   const song = SONG_EXAMPLES[songSel.ex];
   const activeType = SECTION_TYPES[segType(song.seq[songSel.seg])];
@@ -689,6 +690,27 @@ function StructurePage({ done, toggleDone }) {
         一首流行歌通常由幾種功能不同的段落組成，先認識每個段落的工作，再看範例歌曲怎麼安排順序。
       </p>
 
+      <div className="flex gap-2 mb-8">
+        {[
+          { id: 'basic', label: '基本架構' },
+          { id: 'rap', label: 'Rap 架構' },
+        ].map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setStructureView(t.id)}
+            className={`text-sm px-4 py-2 rounded-md border transition-colors ${
+              structureView === t.id
+                ? 'border-[#E8A33D] text-[#F2EFE9] bg-[#E8A33D1A]'
+                : 'border-[#333B52] text-[#A9AFC3] hover:text-[#F2EFE9]'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {structureView === 'basic' && (
+      <>
       <div className="grid gap-3 sm:grid-cols-2 mb-10">
         {Object.entries(SECTION_TYPES).map(([key, s]) => (
           <Panel key={key} className="!p-4">
@@ -766,8 +788,11 @@ function StructurePage({ done, toggleDone }) {
           </div>
         )}
       </Panel>
+      </>
+      )}
 
-      <h3 className="font-serif text-xl mb-4 mt-10">Rap</h3>
+      {structureView === 'rap' && (
+      <>
       <Panel className="mb-6">
         <p className="text-sm text-[#A9AFC3] leading-relaxed mb-1">
           Rap（饒舌）是一種帶有節奏與押韻的說唱方式，1970 年代起源於美國非裔移民社群，是嘻哈文化（Hip-Hop）裡最核心的表演形式之一。
@@ -782,19 +807,18 @@ function StructurePage({ done, toggleDone }) {
         </div>
       </Panel>
 
-      <div className="grid gap-3 sm:grid-cols-2 mb-6">
-        {Object.entries(RAP_TERMS).map(([key, s]) => (
-          <Panel key={key} className="!p-4">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
-              <p className="font-medium">
-                {s.label} <span className="text-[#A9AFC3] font-normal text-xs">{s.en}</span>
-              </p>
-            </div>
-            <p className="text-sm text-[#A9AFC3] leading-relaxed">{s.desc}</p>
-          </Panel>
-        ))}
-      </div>
+      <p className="text-xs text-[#A9AFC3] mb-2">
+        前奏、主歌、導歌、過門、尾奏跟基本架構裡的功能是一樣的，這裡多介紹一個 Rap 特有的段落：
+      </p>
+      <Panel className="!p-4 mb-6 max-w-md">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: RAP_TERMS.hook.color }} />
+          <p className="font-medium">
+            {RAP_TERMS.hook.label} <span className="text-[#A9AFC3] font-normal text-xs">{RAP_TERMS.hook.en}</span>
+          </p>
+        </div>
+        <p className="text-sm text-[#A9AFC3] leading-relaxed">{RAP_TERMS.hook.desc}</p>
+      </Panel>
 
       <StructureDiagram item={RAP_STRUCTURE} types={RAP_TERMS} />
 
@@ -853,6 +877,8 @@ function StructurePage({ done, toggleDone }) {
           </div>
         )}
       </Panel>
+      </>
+      )}
     </div>
   );
 }
