@@ -386,7 +386,7 @@ export default function App() {
   const [playheadCol, setPlayheadCol] = useState(-1);
   const [rhymeOn, setRhymeOn] = useState(false);
   const [lyricAnalysis, setLyricAnalysis] = useState({
-    studentInfo: { className: '', seatNumber: '', name: '' },
+    studentInfo: { className: '', seatNumber: '', name: '', group: '' },
     entries: LYRIC_MEMORY_SONGS.map(() => ({ hook: '', category: '' })),
     custom: { song: '', hook: '', category: '' },
   });
@@ -1032,7 +1032,7 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
       {/* 學生資訊 */}
       <Panel className="mb-6">
         <p className="text-xs text-[#A9AFC3] mb-3">請先填寫你的資訊，方便老師辨識</p>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-4">
           <div>
             <label className="text-xs text-[#A9AFC3] block mb-1">班級</label>
             <input
@@ -1057,6 +1057,16 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
               type="text"
               value={lyricAnalysis.studentInfo.name}
               onChange={(e) => setLyricAnalysis((prev) => ({ ...prev, studentInfo: { ...prev.studentInfo, name: e.target.value } }))}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-[#A9AFC3] block mb-1">組別</label>
+            <input
+              type="text"
+              value={lyricAnalysis.studentInfo.group}
+              onChange={(e) => setLyricAnalysis((prev) => ({ ...prev, studentInfo: { ...prev.studentInfo, group: e.target.value } }))}
+              placeholder="A / B / C"
               className={inputCls}
             />
           </div>
@@ -1199,7 +1209,7 @@ function LyricsPage({ rhymeOn, setRhymeOn, done, toggleDone, subjectLyrics, setS
   );
 }
 
-/* 科目歌詞支線 */
+/* 主題歌詞支線 */
 function SubjectLyricsContent({ subjectLyrics, setSubjectLyrics, onSave, savedMsg }) {
   const [drawing, setDrawing] = useState(false);
 
@@ -1734,9 +1744,9 @@ function TeacherDashboard() {
       'Supernova 洗腦邏輯', 'Supernova 歸類',
       'Cherish 洗腦邏輯', 'Cherish 歸類',
       '自選歌曲', '自選歌曲-洗腦邏輯', '自選歌曲-歸類',
-      '科目歌詞-科目', '科目歌詞-章節', '科目歌詞-歌名', '科目歌詞-歌詞',
+      '主題歌詞-科目', '主題歌詞-章節', '主題歌詞-歌名', '主題歌詞-歌詞',
       '和弦進行',
-      '架構分析完成', '歌詞分析完成', '科目歌詞完成', '歌詞創作完成', '和弦完成', '旋律完成'
+      '架構分析完成', '歌詞分析完成', '主題歌詞完成', '歌詞創作完成', '和弦完成', '旋律完成'
     ];
 
     // 準備資料列
@@ -1769,7 +1779,6 @@ function TeacherDashboard() {
         progression,
         s.completed?.structure ? '✓' : '',
         s.completed?.['lyric-analysis'] ? '✓' : '',
-        s.completed?.['subject-lyrics'] ? '✓' : '',
         s.completed?.lyrics ? '✓' : '',
         s.completed?.chords ? '✓' : '',
         s.completed?.melody ? '✓' : '',
