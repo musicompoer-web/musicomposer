@@ -132,7 +132,6 @@ const CHAPTERS = [
   { id: 'overview', label: '課程總覽', icon: Music },
   { id: 'structure', label: '歌曲架構分析', icon: ListMusic },
   { id: 'lyric-analysis', label: '歌詞記憶分析', icon: Headphones },
-  { id: 'subject-lyrics', label: '科目歌詞', icon: PenLine },
   { id: 'lyrics', label: '歌詞創作', icon: PenLine },
   { id: 'chords', label: '和弦進行', icon: Guitar },
   { id: 'melody', label: '旋律寫作', icon: Waves },
@@ -641,19 +640,8 @@ export default function App() {
           />
         )}
 
-        {page === 'subject-lyrics' && (
-          <SubjectLyricsPage
-            done={completed['subject-lyrics']}
-            toggleDone={() => toggleComplete('subject-lyrics')}
-            subjectLyrics={subjectLyrics}
-            setSubjectLyrics={setSubjectLyrics}
-            onSave={() => persist({})}
-            savedMsg={savedMsg}
-          />
-        )}
-
         {page === 'lyrics' && (
-          <LyricsPage rhymeOn={rhymeOn} setRhymeOn={setRhymeOn} done={completed.lyrics} toggleDone={() => toggleComplete('lyrics')} />
+          <LyricsPage rhymeOn={rhymeOn} setRhymeOn={setRhymeOn} done={completed.lyrics} toggleDone={() => toggleComplete('lyrics')} subjectLyrics={subjectLyrics} setSubjectLyrics={setSubjectLyrics} onSave={() => persist({})} savedMsg={savedMsg} />
         )}
 
         {page === 'chords' && (
@@ -1163,7 +1151,9 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
 /* 章節三：歌詞創作                                                     */
 /* ---------------------------------------------------------------- */
 
-function LyricsPage({ rhymeOn, setRhymeOn, done, toggleDone }) {
+function LyricsPage({ rhymeOn, setRhymeOn, done, toggleDone, subjectLyrics, setSubjectLyrics, onSave, savedMsg }) {
+  const [lyricsMode, setLyricsMode] = useState('subject'); // 'subject' | 'general'
+
   return (
     <div>
       <div className="flex items-center justify-between gap-4 mb-1">
@@ -1173,57 +1163,306 @@ function LyricsPage({ rhymeOn, setRhymeOn, done, toggleDone }) {
         </button>
       </div>
 
-      <div className="grid gap-6">
-        <Panel>
-          <h3 className="font-serif text-lg mb-2">主題發想</h3>
-          <p className="text-sm text-[#A9AFC3] leading-relaxed mb-3">
-            與其想「我要寫一首關於愛情的歌」，不如先找一個具體的畫面或瞬間，例如「補習班樓下的機車，載過三個人」。
-            具體的畫面比抽象的形容詞更容易寫出獨特的句子。
-          </p>
-          <ul className="text-sm text-[#A9AFC3] leading-relaxed list-disc pl-5 space-y-1">
-            <li>先用一句話寫出這首歌想說的核心（不用押韻，先講白話）。</li>
-            <li>列出三個跟主題有關的具體畫面或物件，而不是情緒形容詞。</li>
-            <li>想像這首歌是說給誰聽的，會讓用詞更精準。</li>
-          </ul>
-        </Panel>
-
-        <Panel>
-          <h3 className="font-serif text-lg mb-2">押韻基礎</h3>
-          <p className="text-sm text-[#A9AFC3] leading-relaxed mb-3">
-            常見的押韻方式有 AABB（兩句一組）、ABAB（隔句押韻）、ABCB（只有第二、四句押韻，較口語自然）。
-            下面這段練習用的是 AABB，按一下按鈕看看哪些字押韻。
-          </p>
+      {/* 模式切換 */}
+      <div className="flex gap-2 mb-8">
+        {[
+          { id: 'subject', label: '📖 科目歌詞' },
+          { id: 'general', label: '✍️ 自由創作' },
+        ].map((t) => (
           <button
-            onClick={() => setRhymeOn((v) => !v)}
-            className="text-xs border border-[#333B52] rounded-full px-3 py-1.5 text-[#A9AFC3] hover:text-[#F2EFE9] mb-4"
+            key={t.id}
+            onClick={() => setLyricsMode(t.id)}
+            className={`text-sm px-4 py-2 rounded-md border transition-colors ${
+              lyricsMode === t.id
+                ? 'border-[#E8A33D] text-[#F2EFE9] bg-[#E8A33D1A]'
+                : 'border-[#333B52] text-[#A9AFC3] hover:text-[#F2EFE9]'
+            }`}
           >
-            {rhymeOn ? '隱藏押韻標示' : '顯示押韻標示'}
+            {t.label}
           </button>
-          <div className="space-y-1.5 font-serif text-base leading-loose">
-            {RHYME_LINES.map((l, i) => (
-              <p key={i}>
-                {rhymeOn ? (
-                  <>
-                    {l.text.slice(0, -1)}
-                    <span style={{ color: RHYME_COLORS[l.rhyme], fontWeight: 600 }}>{l.text.slice(-1)}</span>
-                  </>
-                ) : (
-                  l.text
-                )}
+        ))}
+      </div>
+
+      {lyricsMode === 'subject' && (
+        <SubjectLyricsContent
+          subjectLyrics={subjectLyrics}
+          setSubjectLyrics={setSubjectLyrics}
+          onSave={onSave}
+          savedMsg={savedMsg}
+        />
+      )}
+
+      {lyricsMode === 'general' && (
+        <GeneralLyricsContent rhymeOn={rhymeOn} setRhymeOn={setRhymeOn} />
+      )}
+    </div>
+  );
+}
+
+/* 科目歌詞支線 */
+function SubjectLyricsContent({ subjectLyrics, setSubjectLyrics, onSave, savedMsg }) {
+  const [drawing, setDrawing] = useState(false);
+
+  function drawSubject() {
+    if (drawing) return;
+    setDrawing(true);
+    setTimeout(() => {
+      const randomIdx = Math.floor(Math.random() * SUBJECTS.length);
+      setSubjectLyrics((prev) => ({
+        ...prev,
+        drawnSubject: SUBJECTS[randomIdx],
+        customChapter: '',
+        keywords: {
+          branch1: { title: '', words: ['', '', '', ''] },
+          branch2: { title: '', words: ['', '', '', ''] },
+          branch3: { title: '', words: ['', '', '', ''] },
+          branch4: { title: '', words: ['', '', '', ''] },
+        },
+        verse: '',
+        chorus: '',
+        songTitle: '',
+      }));
+      setDrawing(false);
+    }, 1500);
+  }
+
+  function updateKeyword(branch, field, value, wordIdx) {
+    setSubjectLyrics((prev) => {
+      const kw = { ...prev.keywords };
+      if (field === 'title') {
+        kw[branch] = { ...kw[branch], title: value };
+      } else {
+        const words = [...kw[branch].words];
+        words[wordIdx] = value;
+        kw[branch] = { ...kw[branch], words };
+      }
+      return { ...prev, keywords: kw };
+    });
+  }
+
+  const inputCls =
+    'w-full bg-[#1F2430] border border-[#333B52] rounded-md px-3 py-2 text-sm text-[#F2EFE9] focus:outline-none focus:border-[#E8A33D]';
+
+  const branchKeys = ['branch1', 'branch2', 'branch3', 'branch4'];
+
+  return (
+    <div>
+      <p className="text-[#A9AFC3] max-w-[62ch] leading-relaxed mb-8">
+        抽籤決定你的科目，然後自己選一個章節，用腦圖發想關鍵字，最後把關鍵字串成主歌和副歌。
+        用唱歌的方式記住課本內容，比死背更有效！
+      </p>
+
+      {/* 步驟一：抽籤選科目 */}
+      <Panel className="mb-6">
+        <h3 className="font-serif text-lg mb-3">步驟一：抽籤選科目</h3>
+        {!subjectLyrics.drawnSubject ? (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-sm text-[#A9AFC3]">按下按鈕，抽出你的科目！</p>
+            <button
+              onClick={drawSubject}
+              disabled={drawing}
+              className={`px-8 py-3 rounded-md text-base font-medium transition-all ${
+                drawing
+                  ? 'bg-[#333B52] text-[#A9AFC3] animate-pulse'
+                  : 'bg-[#E8A33D] text-[#1B1F2A] hover:bg-[#D4922E]'
+              }`}
+            >
+              {drawing ? '抽籤中...' : '🎰 抽籤！'}
+            </button>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="inline-block bg-[#E8A33D] text-[#1B1F2A] rounded-lg px-8 py-4 mb-3">
+              <p className="text-xs mb-1">你的科目是</p>
+              <p className="font-serif text-3xl font-bold">{subjectLyrics.drawnSubject.name}</p>
+            </div>
+            <br />
+            <button
+              onClick={() => setSubjectLyrics((prev) => ({ ...prev, drawnSubject: null, customChapter: '' }))}
+              className="text-xs text-[#A9AFC3] hover:text-[#F2EFE9] underline"
+            >
+              重新抽籤
+            </button>
+          </div>
+        )}
+      </Panel>
+
+      {/* 步驟二：輸入章節 */}
+      {subjectLyrics.drawnSubject && (
+        <Panel className="mb-6">
+          <h3 className="font-serif text-lg mb-3">步驟二：輸入章節</h3>
+          <p className="text-sm text-[#A9AFC3] mb-3">
+            從「{subjectLyrics.drawnSubject.name}」課本中挑一個你要創作的章節。
+          </p>
+          <input
+            type="text"
+            value={subjectLyrics.customChapter}
+            onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, customChapter: e.target.value }))}
+            placeholder="例如：貞觀之治、赤壁之戰、光合作用..."
+            className={inputCls}
+          />
+        </Panel>
+      )}
+
+      {/* 步驟三：關鍵字發想（腦圖） */}
+      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
+        <Panel className="mb-6">
+          <h3 className="font-serif text-lg mb-3">步驟三：關鍵字發想</h3>
+          <p className="text-sm text-[#A9AFC3] mb-4">
+            中間填入主題，四個分支各填一個分類，每個分類再想 4 個關鍵字。
+          </p>
+
+          {/* 中心主題 */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-[#E8A33D]/10 border-2 border-[#E8A33D] rounded-lg px-6 py-3">
+              <p className="text-xs text-[#E8A33D] text-center mb-1">主題</p>
+              <p className="text-sm font-medium text-center">
+                {subjectLyrics.customChapter}
               </p>
+            </div>
+          </div>
+
+          {/* 四個分支 */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {branchKeys.map((branch, idx) => (
+              <div key={branch} className="bg-[#1F2430] rounded-md p-4">
+                <input
+                  type="text"
+                  value={subjectLyrics.keywords[branch].title}
+                  onChange={(e) => updateKeyword(branch, 'title', e.target.value)}
+                  placeholder={`分類 ${idx + 1}（例如：事件、人物、時間、影響）`}
+                  className={`${inputCls} mb-3 text-center font-medium`}
+                />
+                <div className="space-y-2">
+                  {subjectLyrics.keywords[branch].words.map((w, wIdx) => (
+                    <div key={wIdx} className="flex items-center gap-2">
+                      <span className="text-xs text-[#5B6178] w-4">{wIdx + 1}.</span>
+                      <input
+                        type="text"
+                        value={w}
+                        onChange={(e) => updateKeyword(branch, 'word', e.target.value, wIdx)}
+                        className={inputCls}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </Panel>
+      )}
 
-        <Panel>
-          <h3 className="font-serif text-lg mb-2">字數與旋律對應</h3>
-          <p className="text-sm text-[#A9AFC3] leading-relaxed">
-            中文歌詞要特別注意聲調：如果一個字的聲調和旋律的音高走向差太多，唱起來就會「倒字」，聽起來像另一個字。
-            寫詞時可以先哼一段旋律，再把歌詞的字套進去唱唱看，感受聲調跟音高順不順；副歌的字數通常會比主歌少而整齊，
-            因為要讓最重要的那句話唱得清楚、記得住。
+      {/* 步驟四：完整歌詞 */}
+      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
+        <Panel className="mb-6">
+          <h3 className="font-serif text-lg mb-3">步驟四：創作完整歌詞</h3>
+          <p className="text-sm text-[#A9AFC3] mb-4">
+            把剛才發想的關鍵字串成歌詞。主歌負責說故事，副歌是記憶點最強的段落。
           </p>
+
+          <div className="mb-4">
+            <label className="text-xs text-[#A9AFC3] block mb-1">歌名</label>
+            <input
+              type="text"
+              value={subjectLyrics.songTitle}
+              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, songTitle: e.target.value }))}
+              className={inputCls}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="text-xs text-[#E8A33D] block mb-1">🎤 主歌（Verse）</label>
+            <p className="text-xs text-[#5B6178] mb-2">負責敘事，把章節的重點內容寫進來</p>
+            <textarea
+              value={subjectLyrics.verse}
+              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, verse: e.target.value }))}
+              rows={5}
+              className={inputCls}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="text-xs text-[#E8A33D] block mb-1">🔥 副歌（Chorus）</label>
+            <p className="text-xs text-[#5B6178] mb-2">記憶點最強的段落，最容易被記住的地方</p>
+            <textarea
+              value={subjectLyrics.chorus}
+              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, chorus: e.target.value }))}
+              rows={4}
+              className={inputCls}
+            />
+          </div>
         </Panel>
-      </div>
+      )}
+
+      {/* 儲存按鈕 */}
+      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onSave}
+            className="inline-flex items-center gap-2 bg-[#E8A33D] text-[#1B1F2A] rounded-md px-5 py-2.5 text-sm font-medium hover:bg-[#D4922E]"
+          >
+            <Save size={15} /> 儲存
+          </button>
+          {savedMsg && <span className="text-xs text-[#8FBF9F]">{savedMsg}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* 自由創作支線 */
+function GeneralLyricsContent({ rhymeOn, setRhymeOn }) {
+  return (
+    <div className="grid gap-6">
+      <Panel>
+        <h3 className="font-serif text-lg mb-2">主題發想</h3>
+        <p className="text-sm text-[#A9AFC3] leading-relaxed mb-3">
+          與其想「我要寫一首關於愛情的歌」，不如先找一個具體的畫面或瞬間，例如「補習班樓下的機車，載過三個人」。
+          具體的畫面比抽象的形容詞更容易寫出獨特的句子。
+        </p>
+        <ul className="text-sm text-[#A9AFC3] leading-relaxed list-disc pl-5 space-y-1">
+          <li>先用一句話寫出這首歌想說的核心（不用押韻，先講白話）。</li>
+          <li>列出三個跟主題有關的具體畫面或物件，而不是情緒形容詞。</li>
+          <li>想像這首歌是說給誰聽的，會讓用詞更精準。</li>
+        </ul>
+      </Panel>
+
+      <Panel>
+        <h3 className="font-serif text-lg mb-2">押韻基礎</h3>
+        <p className="text-sm text-[#A9AFC3] leading-relaxed mb-3">
+          常見的押韻方式有 AABB（兩句一組）、ABAB（隔句押韻）、ABCB（只有第二、四句押韻，較口語自然）。
+          下面這段練習用的是 AABB，按一下按鈕看看哪些字押韻。
+        </p>
+        <button
+          onClick={() => setRhymeOn((v) => !v)}
+          className="text-xs border border-[#333B52] rounded-full px-3 py-1.5 text-[#A9AFC3] hover:text-[#F2EFE9] mb-4"
+        >
+          {rhymeOn ? '隱藏押韻標示' : '顯示押韻標示'}
+        </button>
+        <div className="space-y-1.5 font-serif text-base leading-loose">
+          {RHYME_LINES.map((l, i) => (
+            <p key={i}>
+              {rhymeOn ? (
+                <>
+                  {l.text.slice(0, -1)}
+                  <span style={{ color: RHYME_COLORS[l.rhyme], fontWeight: 600 }}>{l.text.slice(-1)}</span>
+                </>
+              ) : (
+                l.text
+              )}
+            </p>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel>
+        <h3 className="font-serif text-lg mb-2">字數與旋律對應</h3>
+        <p className="text-sm text-[#A9AFC3] leading-relaxed">
+          中文歌詞要特別注意聲調：如果一個字的聲調和旋律的音高走向差太多，唱起來就會「倒字」，聽起來像另一個字。
+          寫詞時可以先哼一段旋律，再把歌詞的字套進去唱唱看，感受聲調跟音高順不順；副歌的字數通常會比主歌少而整齊，
+          因為要讓最重要的那句話唱得清楚、記得住。
+        </p>
+      </Panel>
     </div>
   );
 }
@@ -1438,227 +1677,6 @@ function MelodyPage({
             匯出的檔案會存到「檔案」App，和弦跟旋律各自是一軌。在 GarageBand 裡開一首歌 → 檔案瀏覽器裡找到這個 .mid 檔 → 拖進 Keyboard 音軌，就能接著用真的樂器音色繼續製作。
           </p>
         </Panel>
-      )}
-    </div>
-  );
-}
-
-/* ---------------------------------------------------------------- */
-/* 章節：科目歌詞創作                                                    */
-/* ---------------------------------------------------------------- */
-
-function SubjectLyricsPage({ done, toggleDone, subjectLyrics, setSubjectLyrics, onSave, savedMsg }) {
-  const [drawing, setDrawing] = useState(false);
-
-  function drawSubject() {
-    if (drawing) return;
-    setDrawing(true);
-    setTimeout(() => {
-      const randomIdx = Math.floor(Math.random() * SUBJECTS.length);
-      setSubjectLyrics((prev) => ({
-        ...prev,
-        drawnSubject: SUBJECTS[randomIdx],
-        customChapter: '',
-        keywords: {
-          branch1: { title: '', words: ['', '', '', ''] },
-          branch2: { title: '', words: ['', '', '', ''] },
-          branch3: { title: '', words: ['', '', '', ''] },
-          branch4: { title: '', words: ['', '', '', ''] },
-        },
-        verse: '',
-        chorus: '',
-        songTitle: '',
-      }));
-      setDrawing(false);
-    }, 1500);
-  }
-
-  function updateKeyword(branch, field, value, wordIdx) {
-    setSubjectLyrics((prev) => {
-      const kw = { ...prev.keywords };
-      if (field === 'title') {
-        kw[branch] = { ...kw[branch], title: value };
-      } else {
-        const words = [...kw[branch].words];
-        words[wordIdx] = value;
-        kw[branch] = { ...kw[branch], words };
-      }
-      return { ...prev, keywords: kw };
-    });
-  }
-
-  const inputCls =
-    'w-full bg-[#1F2430] border border-[#333B52] rounded-md px-3 py-2 text-sm text-[#F2EFE9] focus:outline-none focus:border-[#E8A33D]';
-
-  const branchKeys = ['branch1', 'branch2', 'branch3', 'branch4'];
-
-  return (
-    <div>
-      <div className="flex items-center justify-between gap-4 mb-1">
-        <SectionHeading eyebrowNum="04" title="科目歌詞創作" />
-        <button onClick={toggleDone} className="shrink-0 text-xs border border-[#333B52] rounded-full px-3 py-1.5 flex items-center gap-1 text-[#A9AFC3] hover:text-[#F2EFE9] mt-1">
-          <Check size={13} className={done ? 'text-[#8FBF9F]' : ''} /> {done ? '已完成' : '標記完成'}
-        </button>
-      </div>
-
-      <p className="text-[#A9AFC3] max-w-[62ch] leading-relaxed -mt-4 mb-8">
-        抽籤決定你的科目，然後自己選一個章節，用腦圖發想關鍵字，最後把關鍵字串成主歌和副歌。
-        用唱歌的方式記住課本內容，比死背更有效！
-      </p>
-
-      {/* 步驟一：抽籤選科目 */}
-      <Panel className="mb-6">
-        <h3 className="font-serif text-lg mb-3">步驟一：抽籤選科目</h3>
-        {!subjectLyrics.drawnSubject ? (
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-sm text-[#A9AFC3]">按下按鈕，抽出你的科目！</p>
-            <button
-              onClick={drawSubject}
-              disabled={drawing}
-              className={`px-8 py-3 rounded-md text-base font-medium transition-all ${
-                drawing
-                  ? 'bg-[#333B52] text-[#A9AFC3] animate-pulse'
-                  : 'bg-[#E8A33D] text-[#1B1F2A] hover:bg-[#D4922E]'
-              }`}
-            >
-              {drawing ? '抽籤中...' : '🎰 抽籤！'}
-            </button>
-          </div>
-        ) : (
-          <div className="text-center">
-            <div className="inline-block bg-[#E8A33D] text-[#1B1F2A] rounded-lg px-8 py-4 mb-3">
-              <p className="text-xs mb-1">你的科目是</p>
-              <p className="font-serif text-3xl font-bold">{subjectLyrics.drawnSubject.name}</p>
-            </div>
-            <br />
-            <button
-              onClick={() => setSubjectLyrics((prev) => ({ ...prev, drawnSubject: null, customChapter: '' }))}
-              className="text-xs text-[#A9AFC3] hover:text-[#F2EFE9] underline"
-            >
-              重新抽籤
-            </button>
-          </div>
-        )}
-      </Panel>
-
-      {/* 步驟二：輸入章節 */}
-      {subjectLyrics.drawnSubject && (
-        <Panel className="mb-6">
-          <h3 className="font-serif text-lg mb-3">步驟二：輸入章節</h3>
-          <p className="text-sm text-[#A9AFC3] mb-3">
-            從「{subjectLyrics.drawnSubject.name}」課本中挑一個你要創作的章節。
-          </p>
-          <input
-            type="text"
-            value={subjectLyrics.customChapter}
-            onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, customChapter: e.target.value }))}
-            placeholder="例如：貞觀之治、赤壁之戰、光合作用..."
-            className={inputCls}
-          />
-        </Panel>
-      )}
-
-      {/* 步驟三：關鍵字發想（腦圖） */}
-      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
-        <Panel className="mb-6">
-          <h3 className="font-serif text-lg mb-3">步驟三：關鍵字發想</h3>
-          <p className="text-sm text-[#A9AFC3] mb-4">
-            中間填入主題，四個分支各填一個分類，每個分類再想 4 個關鍵字。
-          </p>
-
-          {/* 中心主題 */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-[#E8A33D]/10 border-2 border-[#E8A33D] rounded-lg px-6 py-3">
-              <p className="text-xs text-[#E8A33D] text-center mb-1">主題</p>
-              <p className="text-sm font-medium text-center">
-                {subjectLyrics.customChapter}
-              </p>
-            </div>
-          </div>
-
-          {/* 四個分支 */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {branchKeys.map((branch, idx) => (
-              <div key={branch} className="bg-[#1F2430] rounded-md p-4">
-                <input
-                  type="text"
-                  value={subjectLyrics.keywords[branch].title}
-                  onChange={(e) => updateKeyword(branch, 'title', e.target.value)}
-                  placeholder={`分類 ${idx + 1}（例如：事件、人物、時間、影響）`}
-                  className={`${inputCls} mb-3 text-center font-medium`}
-                />
-                <div className="space-y-2">
-                  {subjectLyrics.keywords[branch].words.map((w, wIdx) => (
-                    <div key={wIdx} className="flex items-center gap-2">
-                      <span className="text-xs text-[#5B6178] w-4">{wIdx + 1}.</span>
-                      <input
-                        type="text"
-                        value={w}
-                        onChange={(e) => updateKeyword(branch, 'word', e.target.value, wIdx)}
-                        className={inputCls}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      )}
-
-      {/* 步驟四：完整歌詞 */}
-      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
-        <Panel className="mb-6">
-          <h3 className="font-serif text-lg mb-3">步驟四：創作完整歌詞</h3>
-          <p className="text-sm text-[#A9AFC3] mb-4">
-            把剛才發想的關鍵字串成歌詞。主歌負責說故事，副歌是記憶點最強的段落。
-          </p>
-
-          <div className="mb-4">
-            <label className="text-xs text-[#A9AFC3] block mb-1">歌名</label>
-            <input
-              type="text"
-              value={subjectLyrics.songTitle}
-              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, songTitle: e.target.value }))}
-              className={inputCls}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="text-xs text-[#E8A33D] block mb-1">🎤 主歌（Verse）</label>
-            <p className="text-xs text-[#5B6178] mb-2">負責敘事，把章節的重點內容寫進來</p>
-            <textarea
-              value={subjectLyrics.verse}
-              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, verse: e.target.value }))}
-              rows={5}
-              className={inputCls}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="text-xs text-[#E8A33D] block mb-1">🔥 副歌（Chorus）</label>
-            <p className="text-xs text-[#5B6178] mb-2">記憶點最強的段落，最容易被記住的地方</p>
-            <textarea
-              value={subjectLyrics.chorus}
-              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, chorus: e.target.value }))}
-              rows={4}
-              className={inputCls}
-            />
-          </div>
-        </Panel>
-      )}
-
-      {/* 儲存按鈕 */}
-      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onSave}
-            className="inline-flex items-center gap-2 bg-[#E8A33D] text-[#1B1F2A] rounded-md px-5 py-2.5 text-sm font-medium hover:bg-[#D4922E]"
-          >
-            <Save size={15} /> 儲存
-          </button>
-          {savedMsg && <span className="text-xs text-[#8FBF9F]">{savedMsg}</span>}
-        </div>
       )}
     </div>
   );
