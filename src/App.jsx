@@ -132,9 +132,54 @@ const CHAPTERS = [
   { id: 'overview', label: '課程總覽', icon: Music },
   { id: 'structure', label: '歌曲架構分析', icon: ListMusic },
   { id: 'lyric-analysis', label: '歌詞記憶分析', icon: Headphones },
+  { id: 'subject-lyrics', label: '科目歌詞', icon: PenLine },
   { id: 'lyrics', label: '歌詞創作', icon: PenLine },
   { id: 'chords', label: '和弦進行', icon: Guitar },
   { id: 'melody', label: '旋律寫作', icon: Waves },
+];
+
+// 科目與章節資料
+const SUBJECTS = [
+  {
+    id: 'chinese',
+    name: '國文',
+    chapters: [
+      { id: 'c1', name: '第一課：詩經選', points: ['關雎：愛情與追求', '蒹葭：朦胧的思念', '六義：風雅頌賦比興'] },
+      { id: 'c2', name: '第二課：唐詩選', points: ['李白：蜀道難', '杜甫：登高', '王維：山居秋暝'] },
+      { id: 'c3', name: '第三課：宋詞選', points: ['蘇軾：念奴嬌·赤壁懷古', '李清照：聲聲慢', '辛棄疾：永遇樂'] },
+      { id: 'c4', name: '第四課：古文選', points: ['岳陽樓記：范仲淹', '醉翁亭記：歐陽修', '赤壁賦：蘇軾'] },
+      { id: 'c5', name: '第五課：現代詩', points: ['余光中：鄉愁', '鄭愁予：錯誤', '痖弦：紅玉米'] },
+    ],
+  },
+  {
+    id: 'history',
+    name: '歷史',
+    chapters: [
+      { id: 'h1', name: '第一章：先秦時期', points: ['夏商周三代更替', '春秋戰國百家爭鳴', '秦始皇統一六國'] },
+      { id: 'h2', name: '第二章：漢唐盛世', points: ['劉邦建漢與文景之治', '張騫通西域', '貞觀之治與開元盛世'] },
+      { id: 'h3', name: '第三章：宋元明清', points: ['岳飛抗金', '鄭和下西洋', '鴉片戰爭與辛亥革命'] },
+      { id: 'h4', name: '第四章：世界史', points: ['文藝復興', '工業革命', '兩次世界大戰'] },
+    ],
+  },
+  {
+    id: 'geography',
+    name: '地理',
+    chapters: [
+      { id: 'g1', name: '第一章：地球與地圖', points: ['經緯度與時區', '等高線地形圖', '比例尺與方位'] },
+      { id: 'g2', name: '第二章：氣候與環境', points: ['氣候類型分布', '季風與洋流', '溫室效應'] },
+      { id: 'g3', name: '第三章：人文地理', points: ['人口分佈與遷移', '城市化問題', '台灣產業發展'] },
+    ],
+  },
+  {
+    id: 'civics',
+    name: '公民',
+    chapters: [
+      { id: 'v1', name: '第一章：民主政治', points: ['三權分立', '選舉與投票', '公民不服從'] },
+      { id: 'v2', name: '第二章：權利與義務', points: ['憲法基本權利', '公民義務', '法律與人權'] },
+      { id: 'v3', name: '第三章：經濟與社會', points: ['供需法則', '所得分配', '社會福利制度'] },
+      { id: 'v4', name: '第四章：文化與多元', points: ['文化認同', '多元族群', '性別平等'] },
+    ],
+  },
 ];
 
 const LYRIC_MEMORY_SONGS = [
@@ -347,6 +392,13 @@ export default function App() {
     custom: { song: '', hook: '', category: '' },
   });
 
+  const [subjectLyrics, setSubjectLyrics] = useState({
+    drawnSubject: null,    // 抽中的科目
+    selectedChapter: null, // 選擇的章節
+    lyrics: '',           // 歌詞內容
+    songTitle: '',        // 歌名
+  });
+
   const polyRef = useRef(null);
   const synthRef = useRef(null);
   const loadedRef = useRef(false);
@@ -404,6 +456,9 @@ export default function App() {
               custom: data.lyricAnalysis.custom || prev.custom,
             }));
           }
+          if (data.subjectLyrics) {
+            setSubjectLyrics(data.subjectLyrics);
+          }
         }
       } catch (e) {
         // 沒有先前的資料，忽略即可
@@ -417,7 +472,7 @@ export default function App() {
     async (patch) => {
       if (!loadedRef.current || !user) return;
       try {
-        const payload = { rootIndex, progression, melody, completed, lyricAnalysis, ...patch };
+        const payload = { rootIndex, progression, melody, completed, lyricAnalysis, subjectLyrics, ...patch };
         await setDoc(doc(db, 'progress', user.uid), payload, { merge: true });
         setSavedMsg('已儲存');
         setTimeout(() => setSavedMsg(''), 1800);
@@ -426,7 +481,7 @@ export default function App() {
         setTimeout(() => setSavedMsg(''), 2200);
       }
     },
-    [user, rootIndex, progression, melody, completed, lyricAnalysis]
+    [user, rootIndex, progression, melody, completed, lyricAnalysis, subjectLyrics]
   );
 
   async function ensureAudio() {
@@ -574,6 +629,17 @@ export default function App() {
             toggleDone={() => toggleComplete('lyric-analysis')}
             lyricAnalysis={lyricAnalysis}
             setLyricAnalysis={setLyricAnalysis}
+            onSave={() => persist({})}
+            savedMsg={savedMsg}
+          />
+        )}
+
+        {page === 'subject-lyrics' && (
+          <SubjectLyricsPage
+            done={completed['subject-lyrics']}
+            toggleDone={() => toggleComplete('subject-lyrics')}
+            subjectLyrics={subjectLyrics}
+            setSubjectLyrics={setSubjectLyrics}
             onSave={() => persist({})}
             savedMsg={savedMsg}
           />
@@ -1371,6 +1437,160 @@ function MelodyPage({
 }
 
 /* ---------------------------------------------------------------- */
+/* 章節：科目歌詞創作                                                    */
+/* ---------------------------------------------------------------- */
+
+function SubjectLyricsPage({ done, toggleDone, subjectLyrics, setSubjectLyrics, onSave, savedMsg }) {
+  const [drawing, setDrawing] = useState(false);
+
+  function drawSubject() {
+    if (drawing) return;
+    setDrawing(true);
+    // 轉動動畫 1.5 秒
+    setTimeout(() => {
+      const randomIdx = Math.floor(Math.random() * SUBJECTS.length);
+      setSubjectLyrics((prev) => ({ ...prev, drawnSubject: SUBJECTS[randomIdx], selectedChapter: null }));
+      setDrawing(false);
+    }, 1500);
+  }
+
+  function selectChapter(chapter) {
+    setSubjectLyrics((prev) => ({ ...prev, selectedChapter: chapter }));
+  }
+
+  const inputCls =
+    'w-full bg-[#1F2430] border border-[#333B52] rounded-md px-3 py-2 text-sm text-[#F2EFE9] focus:outline-none focus:border-[#E8A33D]';
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-4 mb-1">
+        <SectionHeading eyebrowNum="04" title="科目歌詞創作" />
+        <button onClick={toggleDone} className="shrink-0 text-xs border border-[#333B52] rounded-full px-3 py-1.5 flex items-center gap-1 text-[#A9AFC3] hover:text-[#F2EFE9] mt-1">
+          <Check size={13} className={done ? 'text-[#8FBF9F]' : ''} /> {done ? '已完成' : '標記完成'}
+        </button>
+      </div>
+
+      <p className="text-[#A9AFC3] max-w-[62ch] leading-relaxed -mt-4 mb-8">
+        先抽籤決定你的科目，再從該科目中挑一個章節，把章節的重點內容改寫成歌詞。
+        用唱歌的方式記住課本內容，比死背更有效！
+      </p>
+
+      {/* 步驟一：抽籤選科目 */}
+      <Panel className="mb-6">
+        <h3 className="font-serif text-lg mb-3">步驟一：抽籤選科目</h3>
+        {!subjectLyrics.drawnSubject ? (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-sm text-[#A9AFC3]">按下按鈕，抽出你的科目！</p>
+            <button
+              onClick={drawSubject}
+              disabled={drawing}
+              className={`px-8 py-3 rounded-md text-base font-medium transition-all ${
+                drawing
+                  ? 'bg-[#333B52] text-[#A9AFC3] animate-pulse'
+                  : 'bg-[#E8A33D] text-[#1B1F2A] hover:bg-[#D4922E]'
+              }`}
+            >
+              {drawing ? '抽籤中...' : '🎰 抽籤！'}
+            </button>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="inline-block bg-[#E8A33D] text-[#1B1F2A] rounded-lg px-8 py-4 mb-3">
+              <p className="text-xs mb-1">你的科目是</p>
+              <p className="font-serif text-3xl font-bold">{subjectLyrics.drawnSubject.name}</p>
+            </div>
+            <button
+              onClick={() => setSubjectLyrics((prev) => ({ ...prev, drawnSubject: null, selectedChapter: null }))}
+              className="text-xs text-[#A9AFC3] hover:text-[#F2EFE9] underline"
+            >
+              重新抽籤
+            </button>
+          </div>
+        )}
+      </Panel>
+
+      {/* 步驟二：自選章節 */}
+      {subjectLyrics.drawnSubject && (
+        <Panel className="mb-6">
+          <h3 className="font-serif text-lg mb-3">步驟二：選擇章節</h3>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {subjectLyrics.drawnSubject.chapters.map((ch) => (
+              <button
+                key={ch.id}
+                onClick={() => selectChapter(ch)}
+                className={`text-left rounded-md border px-4 py-3 transition-colors ${
+                  subjectLyrics.selectedChapter?.id === ch.id
+                    ? 'border-[#E8A33D] bg-[#E8A33D1A]'
+                    : 'border-[#333B52] hover:border-[#5B6178]'
+                }`}
+              >
+                <p className="text-sm font-medium mb-1">{ch.name}</p>
+                <p className="text-xs text-[#A9AFC3]">{ch.points.join('、')}</p>
+              </button>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      {/* 步驟三：創作歌詞 */}
+      {subjectLyrics.selectedChapter && (
+        <Panel className="mb-6">
+          <h3 className="font-serif text-lg mb-3">步驟三：創作歌詞</h3>
+          <div className="bg-[#1F2430] rounded-md p-4 mb-4">
+            <p className="text-xs text-[#E8A33D] mb-2">章節重點</p>
+            <ul className="text-sm text-[#A9AFC3] space-y-1">
+              {subjectLyrics.selectedChapter.points.map((p, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-[#5B6178]">{i + 1}.</span>
+                  {p}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mb-4">
+            <label className="text-xs text-[#A9AFC3] block mb-1">歌名</label>
+            <input
+              type="text"
+              value={subjectLyrics.songTitle}
+              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, songTitle: e.target.value }))}
+              className={inputCls}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="text-xs text-[#A9AFC3] block mb-1">歌詞內容</label>
+            <textarea
+              value={subjectLyrics.lyrics}
+              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, lyrics: e.target.value }))}
+              rows={10}
+              className={inputCls}
+            />
+          </div>
+
+          <p className="text-xs text-[#A9AFC3] leading-relaxed">
+            💡 提示：把章節的重點融入歌詞中，可以使用重複的副歌來加強記憶，讓歌詞朗朗上口。
+          </p>
+        </Panel>
+      )}
+
+      {/* 儲存按鈕 */}
+      {subjectLyrics.selectedChapter && (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onSave}
+            className="inline-flex items-center gap-2 bg-[#E8A33D] text-[#1B1F2A] rounded-md px-5 py-2.5 text-sm font-medium hover:bg-[#D4922E]"
+          >
+            <Save size={15} /> 儲存
+          </button>
+          {savedMsg && <span className="text-xs text-[#8FBF9F]">{savedMsg}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
 /* 教師 Dashboard                                                      */
 /* ---------------------------------------------------------------- */
 
@@ -1429,8 +1649,9 @@ function TeacherDashboard() {
       'Supernova 洗腦邏輯', 'Supernova 歸類',
       'Cherish 洗腦邏輯', 'Cherish 歸類',
       '自選歌曲', '自選歌曲-洗腦邏輯', '自選歌曲-歸類',
+      '科目歌詞-科目', '科目歌詞-章節', '科目歌詞-歌名', '科目歌詞-歌詞',
       '和弦進行',
-      '架構分析完成', '歌詞分析完成', '歌詞創作完成', '和弦完成', '旋律完成'
+      '架構分析完成', '歌詞分析完成', '科目歌詞完成', '歌詞創作完成', '和弦完成', '旋律完成'
     ];
 
     // 準備資料列
@@ -1438,6 +1659,7 @@ function TeacherDashboard() {
       const info = s.lyricAnalysis?.studentInfo || {};
       const entries = s.lyricAnalysis?.entries || [];
       const custom = s.lyricAnalysis?.custom || {};
+      const subj = s.subjectLyrics || {};
       const progression = (s.progression || []).map((d) => ROMAN[d] || '').join(' → ');
 
       return [
@@ -1455,9 +1677,14 @@ function TeacherDashboard() {
         custom.song || '',
         custom.hook || '',
         custom.category || '',
+        subj.drawnSubject?.name || '',
+        subj.selectedChapter?.name || '',
+        subj.songTitle || '',
+        subj.lyrics || '',
         progression,
         s.completed?.structure ? '✓' : '',
         s.completed?.['lyric-analysis'] ? '✓' : '',
+        s.completed?.['subject-lyrics'] ? '✓' : '',
         s.completed?.lyrics ? '✓' : '',
         s.completed?.chords ? '✓' : '',
         s.completed?.melody ? '✓' : '',
