@@ -983,7 +983,6 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
                   value={lyricAnalysis.entries[i]?.hook || ''}
                   onChange={(e) => updateEntry(i, 'hook', e.target.value)}
                   rows={2}
-                  placeholder="例如：重複同一句、用狀聲詞、字數整齊..."
                   className={inputCls}
                 />
               </div>
@@ -993,7 +992,6 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
                   type="text"
                   value={lyricAnalysis.entries[i]?.category || ''}
                   onChange={(e) => updateEntry(i, 'category', e.target.value)}
-                  placeholder="例如：重複型"
                   className={inputCls}
                 />
               </div>
@@ -1017,7 +1015,6 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
                 value={lyricAnalysis.custom.hook}
                 onChange={(e) => updateCustom('hook', e.target.value)}
                 rows={2}
-                placeholder="例如：重複同一句、用狀聲詞、字數整齊..."
                 className={inputCls}
               />
             </div>
@@ -1027,7 +1024,6 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
                 type="text"
                 value={lyricAnalysis.custom.category}
                 onChange={(e) => updateCustom('category', e.target.value)}
-                placeholder="例如：重複型"
                 className={inputCls}
               />
             </div>
