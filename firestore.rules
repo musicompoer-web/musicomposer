@@ -1,9 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 每個使用者只能讀寫自己那一份文件（文件 ID 就是自己的 Google 帳號 uid）
+    // 所有人可讀取（供教師 Dashboard 查看），但只能寫入自己的文件
     match /progress/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
     }
   }
 }

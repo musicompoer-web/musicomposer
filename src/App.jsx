@@ -1380,6 +1380,7 @@ function TeacherDashboard() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
+  const [error, setError] = useState('');
 
   const TEACHER_PASSWORD = 'music2024'; // 可修改為您的密碼
 
@@ -1387,6 +1388,7 @@ function TeacherDashboard() {
     if (password === TEACHER_PASSWORD) {
       setAuthenticated(true);
       setLoading(true);
+      setError('');
       try {
         const snapshot = await getDocs(collection(db, 'progress'));
         const data = [];
@@ -1402,8 +1404,10 @@ function TeacherDashboard() {
           return (aInfo.seatNumber || '').localeCompare(bInfo.seatNumber || '');
         });
         setStudents(data);
+        console.log('載入學生資料:', data); // 除錯用
       } catch (e) {
         console.error('載入失敗:', e);
+        setError(e.message || '載入失敗');
       }
       setLoading(false);
     } else {
@@ -1451,8 +1455,21 @@ function TeacherDashboard() {
 
         {loading ? (
           <p className="text-[#A9AFC3]">載入中...</p>
+        ) : error ? (
+          <div className="bg-[#E1685B]/10 border border-[#E1685B] rounded-md p-4">
+            <p className="text-[#E1685B] text-sm mb-2">❌ 讀取失敗</p>
+            <p className="text-xs text-[#A9AFC3]">{error}</p>
+            <p className="text-xs text-[#A9AFC3] mt-2">
+              請確認 Firebase Console → Firestore → 規則 已更新並發布
+            </p>
+          </div>
         ) : students.length === 0 ? (
-          <p className="text-[#A9AFC3]">尚未有學生提交資料</p>
+          <div className="bg-[#E8A33D]/10 border border-[#E8A33D] rounded-md p-4">
+            <p className="text-[#E8A33D] text-sm mb-2">⚠️ 尚未有學生提交資料</p>
+            <p className="text-xs text-[#A9AFC3]">
+              如果學生已經填答，請檢查：1) 是否按了「儲存」按鈕 2) Firebase 規則是否已更新
+            </p>
+          </div>
         ) : (
           <>
             <p className="text-xs text-[#A9AFC3] mb-4">共 {students.length} 位學生</p>
