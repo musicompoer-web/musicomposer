@@ -1415,6 +1415,80 @@ function TeacherDashboard() {
     }
   }
 
+  function exportToCSV() {
+    if (students.length === 0) {
+      alert('沒有資料可以匯出');
+      return;
+    }
+
+    // 準備表頭
+    const headers = [
+      '班級', '座號', '姓名',
+      'Umbrella 洗腦邏輯', 'Umbrella 歸類',
+      'Drama 洗腦邏輯', 'Drama 歸類',
+      'Supernova 洗腦邏輯', 'Supernova 歸類',
+      'Cherish 洗腦邏輯', 'Cherish 歸類',
+      '自選歌曲', '自選歌曲-洗腦邏輯', '自選歌曲-歸類',
+      '和弦進行',
+      '架構分析完成', '歌詞分析完成', '歌詞創作完成', '和弦完成', '旋律完成'
+    ];
+
+    // 準備資料列
+    const rows = students.map((s) => {
+      const info = s.studentInfo || {};
+      const entries = s.lyricAnalysis?.entries || [];
+      const custom = s.lyricAnalysis?.custom || {};
+      const progression = (s.progression || []).map((d) => ROMAN[d] || '').join(' → ');
+
+      return [
+        info.className || '',
+        info.seatNumber || '',
+        info.name || '',
+        entries[0]?.hook || '',
+        entries[0]?.category || '',
+        entries[1]?.hook || '',
+        entries[1]?.category || '',
+        entries[2]?.hook || '',
+        entries[2]?.category || '',
+        entries[3]?.hook || '',
+        entries[3]?.category || '',
+        custom.song || '',
+        custom.hook || '',
+        custom.category || '',
+        progression,
+        s.completed?.structure ? '✓' : '',
+        s.completed?.['lyric-analysis'] ? '✓' : '',
+        s.completed?.lyrics ? '✓' : '',
+        s.completed?.chords ? '✓' : '',
+        s.completed?.melody ? '✓' : '',
+      ];
+    });
+
+    // 轉換為 CSV 格式（處理逗號和引號）
+    const escapeCSV = (val) => {
+      const str = String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+
+    const csvContent = [
+      headers.map(escapeCSV).join(','),
+      ...rows.map((row) => row.map(escapeCSV).join(','))
+    ].join('\n');
+
+    // 加入 BOM 讓 Excel 正確顯示中文
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `學生回答_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (!authenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#1B1F2A]">
@@ -1445,12 +1519,20 @@ function TeacherDashboard() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="font-serif text-2xl">📊 學生回答總覽</h1>
-          <button
-            onClick={() => setAuthenticated(false)}
-            className="text-xs text-[#A9AFC3] hover:text-[#E1685B]"
-          >
-            登出
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={exportToCSV}
+              className="text-xs bg-[#E8A33D] text-[#1B1F2A] px-4 py-2 rounded-md font-medium hover:bg-[#D4922E]"
+            >
+              📥 匯出 Excel
+            </button>
+            <button
+              onClick={() => setAuthenticated(false)}
+              className="text-xs text-[#A9AFC3] hover:text-[#E1685B]"
+            >
+              登出
+            </button>
+          </div>
         </div>
 
         {loading ? (
