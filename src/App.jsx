@@ -1738,7 +1738,7 @@ function TeacherDashboard() {
 
     // 準備表頭
     const headers = [
-      '班級', '座號', '姓名',
+      '班級', '座號', '姓名', '組別',
       'Umbrella 洗腦邏輯', 'Umbrella 歸類',
       'Drama 洗腦邏輯', 'Drama 歸類',
       'Supernova 洗腦邏輯', 'Supernova 歸類',
@@ -1761,6 +1761,7 @@ function TeacherDashboard() {
         info.className || '',
         info.seatNumber || '',
         info.name || '',
+        info.group || '',
         entries[0]?.hook || '',
         entries[0]?.category || '',
         entries[1]?.hook || '',
@@ -1890,6 +1891,7 @@ function TeacherDashboard() {
                       <span className="text-sm font-medium w-24">{info.className || '—'}</span>
                       <span className="text-sm text-[#A9AFC3] w-12">{info.seatNumber || '—'}</span>
                       <span className="text-sm flex-1">{info.name || '未填寫'}</span>
+                      <span className="text-xs bg-[#333B52] text-[#A9AFC3] px-2 py-0.5 rounded">{info.group || '—'}</span>
                       <span className="text-xs text-[#5B6178]">{isExpanded ? '▲' : '▼'}</span>
                     </button>
 
