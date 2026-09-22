@@ -819,7 +819,7 @@ function StructurePage({ done, toggleDone }) {
       <p className="text-xs text-[#A9AFC3] mb-2">
         前奏、主歌、導歌、過門、尾奏跟基本架構裡的功能是一樣的，這裡多介紹一個 Rap 特有的段落：
       </p>
-      <Panel className="!p-4 mb-6 max-w-md">
+      <Panel className="!p-4 mb-6">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="w-2.5 h-2.5 rounded-full" style={{ background: RAP_TERMS.hook.color }} />
           <p className="font-medium">
