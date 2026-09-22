@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as Tone from 'tone';
-import { Music, ListMusic, PenLine, Guitar, Waves, Play, Save, Check, X, Download, LogOut, ExternalLink } from 'lucide-react';
+import { Music, ListMusic, PenLine, Guitar, Waves, Play, Save, Check, X, Download, LogOut, ExternalLink, Headphones } from 'lucide-react';
 import { auth, googleProvider, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -131,9 +131,19 @@ const PRESETS = [
 const CHAPTERS = [
   { id: 'overview', label: '課程總覽', icon: Music },
   { id: 'structure', label: '歌曲架構分析', icon: ListMusic },
+  { id: 'lyric-analysis', label: '歌詞記憶分析', icon: Headphones },
   { id: 'lyrics', label: '歌詞創作', icon: PenLine },
   { id: 'chords', label: '和弦進行', icon: Guitar },
   { id: 'melody', label: '旋律寫作', icon: Waves },
+];
+
+const LYRIC_MEMORY_SONGS = [
+  { artist: 'Rihanna', title: 'Umbrella', url: 'https://www.youtube.com/watch?v=CvBfHwUxHIk&t=52s' },
+  { artist: 'aespa', title: 'Drama', url: 'https://www.youtube.com/watch?v=3CvJKTChsl4&t=53s' },
+  { artist: 'aespa', title: 'Supernova', url: 'https://www.youtube.com/watch?v=phuiiNCxRMg&t=35s' },
+  { artist: 'ILLIT', title: 'Cherish', url: 'https://www.youtube.com/watch?v=tbDGl7jEazA&t=36s' },
+  { artist: 'Lee Hi ft. Jennie Kim', title: 'Special', url: 'https://www.youtube.com/watch?v=MvxxlKJ11aI&t=65s' },
+  { artist: 'Taeyeon', title: 'INVU', url: 'https://www.youtube.com/watch?v=AbZH7XWDW_k&t=38s' },
 ];
 
 const SECTION_TYPES = {
@@ -538,6 +548,10 @@ export default function App() {
           <StructurePage done={completed.structure} toggleDone={() => toggleComplete('structure')} />
         )}
 
+        {page === 'lyric-analysis' && (
+          <LyricAnalysisPage done={completed['lyric-analysis']} toggleDone={() => toggleComplete('lyric-analysis')} />
+        )}
+
         {page === 'lyrics' && (
           <LyricsPage rhymeOn={rhymeOn} setRhymeOn={setRhymeOn} done={completed.lyrics} toggleDone={() => toggleComplete('lyrics')} />
         )}
@@ -596,6 +610,7 @@ export default function App() {
 function OverviewPage({ completed, go }) {
   const cards = [
     { id: 'structure', title: '歌曲架構分析', desc: '認識前奏、主歌、副歌、橋段在一首歌裡各自負責什麼工作。', icon: ListMusic },
+    { id: 'lyric-analysis', title: '歌詞記憶分析', desc: '聽幾首洗腦金曲的副歌片段，感受什麼樣的歌詞和節奏最容易被記住。', icon: Headphones },
     { id: 'lyrics', title: '歌詞創作', desc: '從主題發想到押韻技巧，練習把想法變成能唱的句子。', icon: PenLine },
     { id: 'chords', title: '和弦進行', desc: '用互動和弦工具聽懂每個級數的情緒，動手排出自己的和弦進行。', icon: Guitar },
     { id: 'melody', title: '旋律寫作', desc: '在鋼琴捲軸上為你的和弦進行畫出第一條旋律線。', icon: Waves },
@@ -893,14 +908,54 @@ function StructurePage({ done, toggleDone }) {
 }
 
 /* ---------------------------------------------------------------- */
-/* 章節二：歌詞創作                                                     */
+/* 章節二：歌詞記憶分析                                                 */
+/* ---------------------------------------------------------------- */
+
+function LyricAnalysisPage({ done, toggleDone }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-4 mb-1">
+        <SectionHeading eyebrowNum="02" title="歌詞記憶分析" />
+        <button onClick={toggleDone} className="shrink-0 text-xs border border-[#333B52] rounded-full px-3 py-1.5 flex items-center gap-1 text-[#A9AFC3] hover:text-[#F2EFE9] mt-1">
+          <Check size={13} className={done ? 'text-[#8FBF9F]' : ''} /> {done ? '已完成' : '標記完成'}
+        </button>
+      </div>
+
+      <p className="text-[#A9AFC3] max-w-[62ch] leading-relaxed -mt-4 mb-8">
+        在開始寫詞之前，先聽聽這幾首歌的副歌片段，感受一下：什麼樣的字詞、節奏、重複方式，會讓一句歌詞一聽就記住、忍不住跟著唱。
+        點下面的連結會直接跳到副歌開始的時間點。
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {LYRIC_MEMORY_SONGS.map((s, i) => (
+          <a
+            key={i}
+            href={s.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between gap-3 border border-[#333B52] rounded-md px-4 py-3 hover:border-[#E8A33D] hover:bg-[#232838] transition-colors"
+          >
+            <div>
+              <p className="font-medium text-sm">{s.title}</p>
+              <p className="text-xs text-[#A9AFC3] mt-0.5">{s.artist}</p>
+            </div>
+            <ExternalLink size={15} className="text-[#A9AFC3] group-hover:text-[#E8A33D] shrink-0" />
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* 章節三：歌詞創作                                                     */
 /* ---------------------------------------------------------------- */
 
 function LyricsPage({ rhymeOn, setRhymeOn, done, toggleDone }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-4 mb-1">
-        <SectionHeading eyebrowNum="02" title="歌詞創作" />
+        <SectionHeading eyebrowNum="03" title="歌詞創作" />
         <button onClick={toggleDone} className="shrink-0 text-xs border border-[#333B52] rounded-full px-3 py-1.5 flex items-center gap-1 text-[#A9AFC3] hover:text-[#F2EFE9] mt-1">
           <Check size={13} className={done ? 'text-[#8FBF9F]' : ''} /> {done ? '已完成' : '標記完成'}
         </button>
@@ -972,7 +1027,7 @@ function ChordsPage({
   return (
     <div>
       <div className="flex items-center justify-between gap-4 mb-1">
-        <SectionHeading eyebrowNum="03" title="和弦進行" />
+        <SectionHeading eyebrowNum="04" title="和弦進行" />
         <button onClick={toggleDone} className="shrink-0 text-xs border border-[#333B52] rounded-full px-3 py-1.5 flex items-center gap-1 text-[#A9AFC3] hover:text-[#F2EFE9] mt-1">
           <Check size={13} className={done ? 'text-[#8FBF9F]' : ''} /> {done ? '已完成' : '標記完成'}
         </button>
@@ -1088,7 +1143,7 @@ function MelodyPage({
   return (
     <div>
       <div className="flex items-center justify-between gap-4 mb-1">
-        <SectionHeading eyebrowNum="04" title="旋律寫作" />
+        <SectionHeading eyebrowNum="05" title="旋律寫作" />
         <button onClick={toggleDone} className="shrink-0 text-xs border border-[#333B52] rounded-full px-3 py-1.5 flex items-center gap-1 text-[#A9AFC3] hover:text-[#F2EFE9] mt-1">
           <Check size={13} className={done ? 'text-[#8FBF9F]' : ''} /> {done ? '已完成' : '標記完成'}
         </button>
