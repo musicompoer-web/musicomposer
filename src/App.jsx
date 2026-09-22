@@ -1314,9 +1314,6 @@ function SubjectLyricsContent({ subjectLyrics, setSubjectLyrics, onSave, savedMs
       {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
         <Panel className="mb-6">
           <h3 className="font-serif text-lg mb-3">步驟三：關鍵字發想</h3>
-          <p className="text-sm text-[#A9AFC3] mb-4">
-            中間填入主題，四個分支各填一個分類，每個分類再想 4 個關鍵字。
-          </p>
 
           {/* 中心主題 */}
           <div className="flex justify-center mb-6">
