@@ -394,9 +394,16 @@ export default function App() {
 
   const [subjectLyrics, setSubjectLyrics] = useState({
     drawnSubject: null,    // 抽中的科目
-    selectedChapter: null, // 選擇的章節
-    lyrics: '',           // 歌詞內容
-    songTitle: '',        // 歌名
+    customChapter: '',     // 學生自己輸入的章節
+    keywords: {            // 關鍵字發想（4 個分類 × 各 4 個）
+      branch1: { title: '', words: ['', '', '', ''] },
+      branch2: { title: '', words: ['', '', '', ''] },
+      branch3: { title: '', words: ['', '', '', ''] },
+      branch4: { title: '', words: ['', '', '', ''] },
+    },
+    verse: '',             // 主歌
+    chorus: '',            // 副歌
+    songTitle: '',         // 歌名
   });
 
   const polyRef = useRef(null);
@@ -1446,20 +1453,44 @@ function SubjectLyricsPage({ done, toggleDone, subjectLyrics, setSubjectLyrics, 
   function drawSubject() {
     if (drawing) return;
     setDrawing(true);
-    // 轉動動畫 1.5 秒
     setTimeout(() => {
       const randomIdx = Math.floor(Math.random() * SUBJECTS.length);
-      setSubjectLyrics((prev) => ({ ...prev, drawnSubject: SUBJECTS[randomIdx], selectedChapter: null }));
+      setSubjectLyrics((prev) => ({
+        ...prev,
+        drawnSubject: SUBJECTS[randomIdx],
+        customChapter: '',
+        keywords: {
+          branch1: { title: '', words: ['', '', '', ''] },
+          branch2: { title: '', words: ['', '', '', ''] },
+          branch3: { title: '', words: ['', '', '', ''] },
+          branch4: { title: '', words: ['', '', '', ''] },
+        },
+        verse: '',
+        chorus: '',
+        songTitle: '',
+      }));
       setDrawing(false);
     }, 1500);
   }
 
-  function selectChapter(chapter) {
-    setSubjectLyrics((prev) => ({ ...prev, selectedChapter: chapter }));
+  function updateKeyword(branch, field, value, wordIdx) {
+    setSubjectLyrics((prev) => {
+      const kw = { ...prev.keywords };
+      if (field === 'title') {
+        kw[branch] = { ...kw[branch], title: value };
+      } else {
+        const words = [...kw[branch].words];
+        words[wordIdx] = value;
+        kw[branch] = { ...kw[branch], words };
+      }
+      return { ...prev, keywords: kw };
+    });
   }
 
   const inputCls =
     'w-full bg-[#1F2430] border border-[#333B52] rounded-md px-3 py-2 text-sm text-[#F2EFE9] focus:outline-none focus:border-[#E8A33D]';
+
+  const branchKeys = ['branch1', 'branch2', 'branch3', 'branch4'];
 
   return (
     <div>
@@ -1471,7 +1502,7 @@ function SubjectLyricsPage({ done, toggleDone, subjectLyrics, setSubjectLyrics, 
       </div>
 
       <p className="text-[#A9AFC3] max-w-[62ch] leading-relaxed -mt-4 mb-8">
-        先抽籤決定你的科目，再從該科目中挑一個章節，把章節的重點內容改寫成歌詞。
+        抽籤決定你的科目，然後自己選一個章節，用腦圖發想關鍵字，最後把關鍵字串成主歌和副歌。
         用唱歌的方式記住課本內容，比死背更有效！
       </p>
 
@@ -1499,8 +1530,9 @@ function SubjectLyricsPage({ done, toggleDone, subjectLyrics, setSubjectLyrics, 
               <p className="text-xs mb-1">你的科目是</p>
               <p className="font-serif text-3xl font-bold">{subjectLyrics.drawnSubject.name}</p>
             </div>
+            <br />
             <button
-              onClick={() => setSubjectLyrics((prev) => ({ ...prev, drawnSubject: null, selectedChapter: null }))}
+              onClick={() => setSubjectLyrics((prev) => ({ ...prev, drawnSubject: null, customChapter: '' }))}
               className="text-xs text-[#A9AFC3] hover:text-[#F2EFE9] underline"
             >
               重新抽籤
@@ -1509,44 +1541,78 @@ function SubjectLyricsPage({ done, toggleDone, subjectLyrics, setSubjectLyrics, 
         )}
       </Panel>
 
-      {/* 步驟二：自選章節 */}
+      {/* 步驟二：輸入章節 */}
       {subjectLyrics.drawnSubject && (
         <Panel className="mb-6">
-          <h3 className="font-serif text-lg mb-3">步驟二：選擇章節</h3>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {subjectLyrics.drawnSubject.chapters.map((ch) => (
-              <button
-                key={ch.id}
-                onClick={() => selectChapter(ch)}
-                className={`text-left rounded-md border px-4 py-3 transition-colors ${
-                  subjectLyrics.selectedChapter?.id === ch.id
-                    ? 'border-[#E8A33D] bg-[#E8A33D1A]'
-                    : 'border-[#333B52] hover:border-[#5B6178]'
-                }`}
-              >
-                <p className="text-sm font-medium mb-1">{ch.name}</p>
-                <p className="text-xs text-[#A9AFC3]">{ch.points.join('、')}</p>
-              </button>
+          <h3 className="font-serif text-lg mb-3">步驟二：輸入章節</h3>
+          <p className="text-sm text-[#A9AFC3] mb-3">
+            從「{subjectLyrics.drawnSubject.name}」課本中挑一個你要創作的章節。
+          </p>
+          <input
+            type="text"
+            value={subjectLyrics.customChapter}
+            onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, customChapter: e.target.value }))}
+            placeholder="例如：貞觀之治、赤壁之戰、光合作用..."
+            className={inputCls}
+          />
+        </Panel>
+      )}
+
+      {/* 步驟三：關鍵字發想（腦圖） */}
+      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
+        <Panel className="mb-6">
+          <h3 className="font-serif text-lg mb-3">步驟三：關鍵字發想</h3>
+          <p className="text-sm text-[#A9AFC3] mb-4">
+            中間填入主題，四個分支各填一個分類，每個分類再想 4 個關鍵字。
+          </p>
+
+          {/* 中心主題 */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-[#E8A33D]/10 border-2 border-[#E8A33D] rounded-lg px-6 py-3">
+              <p className="text-xs text-[#E8A33D] text-center mb-1">主題</p>
+              <p className="text-sm font-medium text-center">
+                {subjectLyrics.customChapter}
+              </p>
+            </div>
+          </div>
+
+          {/* 四個分支 */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {branchKeys.map((branch, idx) => (
+              <div key={branch} className="bg-[#1F2430] rounded-md p-4">
+                <input
+                  type="text"
+                  value={subjectLyrics.keywords[branch].title}
+                  onChange={(e) => updateKeyword(branch, 'title', e.target.value)}
+                  placeholder={`分類 ${idx + 1}（例如：事件、人物、時間、影響）`}
+                  className={`${inputCls} mb-3 text-center font-medium`}
+                />
+                <div className="space-y-2">
+                  {subjectLyrics.keywords[branch].words.map((w, wIdx) => (
+                    <div key={wIdx} className="flex items-center gap-2">
+                      <span className="text-xs text-[#5B6178] w-4">{wIdx + 1}.</span>
+                      <input
+                        type="text"
+                        value={w}
+                        onChange={(e) => updateKeyword(branch, 'word', e.target.value, wIdx)}
+                        className={inputCls}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </Panel>
       )}
 
-      {/* 步驟三：創作歌詞 */}
-      {subjectLyrics.selectedChapter && (
+      {/* 步驟四：完整歌詞 */}
+      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
         <Panel className="mb-6">
-          <h3 className="font-serif text-lg mb-3">步驟三：創作歌詞</h3>
-          <div className="bg-[#1F2430] rounded-md p-4 mb-4">
-            <p className="text-xs text-[#E8A33D] mb-2">章節重點</p>
-            <ul className="text-sm text-[#A9AFC3] space-y-1">
-              {subjectLyrics.selectedChapter.points.map((p, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <span className="text-[#5B6178]">{i + 1}.</span>
-                  {p}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <h3 className="font-serif text-lg mb-3">步驟四：創作完整歌詞</h3>
+          <p className="text-sm text-[#A9AFC3] mb-4">
+            把剛才發想的關鍵字串成歌詞。主歌負責說故事，副歌是記憶點最強的段落。
+          </p>
 
           <div className="mb-4">
             <label className="text-xs text-[#A9AFC3] block mb-1">歌名</label>
@@ -1559,23 +1625,31 @@ function SubjectLyricsPage({ done, toggleDone, subjectLyrics, setSubjectLyrics, 
           </div>
 
           <div className="mb-4">
-            <label className="text-xs text-[#A9AFC3] block mb-1">歌詞內容</label>
+            <label className="text-xs text-[#E8A33D] block mb-1">🎤 主歌（Verse）</label>
+            <p className="text-xs text-[#5B6178] mb-2">負責敘事，把章節的重點內容寫進來</p>
             <textarea
-              value={subjectLyrics.lyrics}
-              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, lyrics: e.target.value }))}
-              rows={10}
+              value={subjectLyrics.verse}
+              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, verse: e.target.value }))}
+              rows={5}
               className={inputCls}
             />
           </div>
 
-          <p className="text-xs text-[#A9AFC3] leading-relaxed">
-            💡 提示：把章節的重點融入歌詞中，可以使用重複的副歌來加強記憶，讓歌詞朗朗上口。
-          </p>
+          <div className="mb-4">
+            <label className="text-xs text-[#E8A33D] block mb-1">🔥 副歌（Chorus）</label>
+            <p className="text-xs text-[#5B6178] mb-2">記憶點最強的段落，最容易被記住的地方</p>
+            <textarea
+              value={subjectLyrics.chorus}
+              onChange={(e) => setSubjectLyrics((prev) => ({ ...prev, chorus: e.target.value }))}
+              rows={4}
+              className={inputCls}
+            />
+          </div>
         </Panel>
       )}
 
       {/* 儲存按鈕 */}
-      {subjectLyrics.selectedChapter && (
+      {subjectLyrics.drawnSubject && subjectLyrics.customChapter && (
         <div className="flex items-center gap-3">
           <button
             onClick={onSave}
