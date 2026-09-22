@@ -170,16 +170,32 @@ const GENERIC_STRUCTURES = [
 const RAP_TERMS = {
   intro: { label: '前奏', en: 'Intro', color: '#5FA39B', desc: '決定整首歌一開始的氛圍。' },
   verse: { label: '主歌', en: 'Verse', color: '#7C8CE0', desc: '敘述故事，是饒舌歌詞發揮的重點段落。' },
-  hook: { label: '副歌', en: 'Hook', color: '#E8A33D', desc: '通常是作者最想表達的意義或宗旨，重複出現、最好記。' },
+  prechorus: { label: '導歌', en: 'Pre-Chorus', color: '#C58BDB', desc: '銜接主歌與副歌（Hook）之間，讓情緒堆疊，副歌出現更有記憶點。' },
+  hook: { label: '副歌', en: 'Hook', color: '#E8A33D', desc: '一首歌裡最吸睛、最洗腦、最容易被記住並跟著唱的段落，像鉤子一樣把聽眾的耳朵「鉤住」。在流行歌裡 Hook 通常就是副歌，但概念上不完全一樣：副歌（Chorus）是結構上的說法，指主歌之間重複出現的高潮段落；Hook 則是創作與風格上的說法，強調「記憶點」——可以是副歌，也可以是一句重複的襯詞、一段洗腦口白，甚至一段樂器演奏。' },
   bridge: { label: '過門', en: 'Bridge', color: '#E1685B', desc: '銜接段落之間的情緒轉換。' },
   outro: { label: '尾奏', en: 'Outro', color: '#5FA39B', desc: '決定整首歌收尾時想傳達的氛圍。' },
 };
 
 const RAP_STRUCTURE = {
   name: 'Rap 曲式範例',
-  note: '前奏之後先用一段過門銜接情緒，主歌和副歌（Hook）依歌曲長度重複兩到三次，最後再用過門收束情緒，尾奏結束。',
-  seq: ['intro', 'bridge', { type: 'verse', tag: '1' }, 'hook', { type: 'verse', tag: '2' }, 'hook', 'bridge', 'outro'],
+  note: '主歌和副歌（Hook）依歌曲長度重複兩到三次，前奏起頭、尾奏收尾。',
+  seq: ['intro', { type: 'verse', tag: '1' }, 'hook', { type: 'verse', tag: '2' }, 'hook', 'outro'],
 };
+
+const RAP_SONG_EXAMPLES = [
+  {
+    name: 'BLACKPINK《DDU-DU DDU-DU》',
+    url: 'https://www.youtube.com/watch?v=IHNzOHi8sJs',
+    note: '主歌其實是主唱的旋律接上饒舌手的饒舌段落，兩種唱法連在一起才進導歌；導歌堆疊情緒後進副歌（也就是那句「Hit you with that ddu-du ddu-du du」），整組重複兩次，最後一段橋段收尾。',
+    seq: ['intro', { type: 'verse', tag: '1' }, 'prechorus', 'hook', { type: 'verse', tag: '2' }, 'prechorus', 'hook', 'bridge', 'outro'],
+  },
+  {
+    name: 'BTS《DNA》',
+    url: 'https://www.youtube.com/watch?v=MBdVXkSdhwU',
+    note: '主歌 1 是主唱的旋律，主歌 2 換成饒舌手（J-Hope、RM）的饒舌段落——同一個位置輪流用兩種唱法出現；導歌堆疊後進副歌，第二輪主歌又是一段饒舌，最後接一段橋段再回副歌收尾。',
+    seq: ['intro', { type: 'verse', tag: '1' }, { type: 'verse', tag: '2' }, 'prechorus', 'hook', { type: 'verse', tag: '3' }, 'prechorus', 'bridge', 'hook', 'outro'],
+  },
+];
 
 const SONG_EXAMPLES = [
   {
@@ -657,6 +673,10 @@ function StructurePage({ done, toggleDone }) {
   const song = SONG_EXAMPLES[songSel.ex];
   const activeType = SECTION_TYPES[segType(song.seq[songSel.seg])];
 
+  const [rapSongSel, setRapSongSel] = useState({ ex: 0, seg: 0 });
+  const rapSong = RAP_SONG_EXAMPLES[rapSongSel.ex];
+  const rapActiveType = RAP_TERMS[segType(rapSong.seq[rapSongSel.seg])];
+
   return (
     <div>
       <div className="flex items-center justify-between gap-4 mb-1">
@@ -777,6 +797,62 @@ function StructurePage({ done, toggleDone }) {
       </div>
 
       <StructureDiagram item={RAP_STRUCTURE} types={RAP_TERMS} />
+
+      <p className="text-xs text-[#A9AFC3] mt-6 mb-2">K-pop 範例</p>
+      <div className="flex flex-wrap gap-2 mb-5">
+        {RAP_SONG_EXAMPLES.map((e, i) => (
+          <button
+            key={e.name}
+            onClick={() => setRapSongSel({ ex: i, seg: 0 })}
+            className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+              rapSongSel.ex === i ? 'border-[#E8A33D] text-[#F2EFE9] bg-[#E8A33D1A]' : 'border-[#333B52] text-[#A9AFC3] hover:text-[#F2EFE9]'
+            }`}
+          >
+            {e.name}
+          </button>
+        ))}
+      </div>
+
+      <Panel>
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <p className="text-sm text-[#A9AFC3]">{rapSong.note}</p>
+          <a
+            href={rapSong.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 inline-flex items-center gap-1 text-xs text-[#E8A33D] hover:underline whitespace-nowrap"
+          >
+            YouTube <ExternalLink size={12} />
+          </a>
+        </div>
+        <div className="flex w-full rounded overflow-hidden h-11 mb-4">
+          {rapSong.seq.map((seg, i) => {
+            const s = RAP_TERMS[segType(seg)];
+            const active = rapSongSel.seg === i;
+            return (
+              <button
+                key={i}
+                onClick={() => setRapSongSel({ ex: rapSongSel.ex, seg: i })}
+                title={segLabel(seg, RAP_TERMS)}
+                style={{ background: s.color, flex: 1 }}
+                className={`text-xs font-medium text-[#1B1F2A] flex items-center justify-center border-r border-[#1B1F2A]/20 last:border-r-0 ${
+                  active ? 'ring-2 ring-inset ring-white' : ''
+                }`}
+              >
+                {segLabel(seg, RAP_TERMS)}
+              </button>
+            );
+          })}
+        </div>
+        {rapActiveType && (
+          <div className="border-t border-[#333B52] pt-4">
+            <p className="font-medium mb-1">
+              {segLabel(rapSong.seq[rapSongSel.seg], RAP_TERMS)} {rapActiveType.en}
+            </p>
+            <p className="text-sm text-[#A9AFC3] leading-relaxed">{rapActiveType.desc}</p>
+          </div>
+        )}
+      </Panel>
     </div>
   );
 }
