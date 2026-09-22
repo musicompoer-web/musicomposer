@@ -341,6 +341,7 @@ export default function App() {
   const [playheadCol, setPlayheadCol] = useState(-1);
   const [rhymeOn, setRhymeOn] = useState(false);
   const [lyricAnalysis, setLyricAnalysis] = useState({
+    studentInfo: { className: '', seatNumber: '', name: '' },
     entries: LYRIC_MEMORY_SONGS.map(() => ({ hook: '', category: '' })),
     custom: { song: '', hook: '', category: '' },
   });
@@ -395,6 +396,7 @@ export default function App() {
           if (data.completed) setCompleted(data.completed);
           if (data.lyricAnalysis) {
             setLyricAnalysis((prev) => ({
+              studentInfo: data.lyricAnalysis.studentInfo || prev.studentInfo,
               entries: Array.isArray(data.lyricAnalysis.entries) && data.lyricAnalysis.entries.length === prev.entries.length
                 ? data.lyricAnalysis.entries
                 : prev.entries,
@@ -959,6 +961,43 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
         點連結聽聽這幾首歌的副歌片段（會直接跳到副歌開始的時間點），想想這句歌詞為什麼讓人一聽就記住、忍不住跟著唱，
         寫下你觀察到的「洗腦邏輯」，再幫它歸類。最後一列可以填你自己找到的歌。
       </p>
+
+      {/* 學生資訊 */}
+      <Panel className="mb-6">
+        <p className="text-xs text-[#A9AFC3] mb-3">請先填寫你的資訊，方便老師辨識</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div>
+            <label className="text-xs text-[#A9AFC3] block mb-1">班級</label>
+            <input
+              type="text"
+              value={lyricAnalysis.studentInfo.className}
+              onChange={(e) => setLyricAnalysis((prev) => ({ ...prev, studentInfo: { ...prev.studentInfo, className: e.target.value } }))}
+              placeholder="例如：一年忠班"
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-[#A9AFC3] block mb-1">座號</label>
+            <input
+              type="text"
+              value={lyricAnalysis.studentInfo.seatNumber}
+              onChange={(e) => setLyricAnalysis((prev) => ({ ...prev, studentInfo: { ...prev.studentInfo, seatNumber: e.target.value } }))}
+              placeholder="例如：12"
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-[#A9AFC3] block mb-1">姓名</label>
+            <input
+              type="text"
+              value={lyricAnalysis.studentInfo.name}
+              onChange={(e) => setLyricAnalysis((prev) => ({ ...prev, studentInfo: { ...prev.studentInfo, name: e.target.value } }))}
+              placeholder="你的姓名"
+              className={inputCls}
+            />
+          </div>
+        </div>
+      </Panel>
 
       <div className="space-y-3">
         {LYRIC_MEMORY_SONGS.map((s, i) => (
