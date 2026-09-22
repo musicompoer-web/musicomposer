@@ -1258,11 +1258,6 @@ function SubjectLyricsContent({ subjectLyrics, setSubjectLyrics, onSave, savedMs
 
   return (
     <div>
-      <p className="text-[#A9AFC3] max-w-[62ch] leading-relaxed mb-8">
-        抽籤決定你的科目，然後自己選一個章節，用腦圖發想關鍵字，最後把關鍵字串成主歌和副歌。
-        用唱歌的方式記住課本內容，比死背更有效！
-      </p>
-
       {/* 組別填入 */}
       <Panel className="mb-6">
         <h3 className="font-serif text-lg mb-3">組別</h3>
