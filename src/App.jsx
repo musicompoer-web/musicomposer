@@ -1025,11 +1025,6 @@ function LyricAnalysisPage({ done, toggleDone, lyricAnalysis, setLyricAnalysis, 
         </button>
       </div>
 
-      <p className="text-[#A9AFC3] max-w-[62ch] leading-relaxed -mt-4 mb-8">
-        點連結聽聽這幾首歌的副歌片段（會直接跳到副歌開始的時間點），想想這句歌詞為什麼讓人一聽就記住、忍不住跟著唱，
-        寫下你觀察到的「洗腦邏輯」，再幫它歸類。最後一列可以填你自己找到的歌。
-      </p>
-
       {/* 學生資訊 */}
       <Panel className="mb-6">
         <p className="text-xs text-[#A9AFC3] mb-3">請先填寫你的資訊，方便老師辨識</p>
